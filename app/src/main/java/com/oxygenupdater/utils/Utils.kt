@@ -86,11 +86,11 @@ object Utils {
             }
 
             // Device not found among the server-provided list; assume it's a newly-released
-            // OPPO/OnePlus device that we're yet to add support for.
+            // OPPO/OnePlus/realme device that we're yet to add support for.
             UnsupportedDevice
         } else {
             // Device isn't running OxygenOS/ColorOS at all. Note that it may still be an
-            // OPPO/OnePlus device running a custom ROM.
+            // OPPO/OnePlus/realme device running a custom ROM.
             UnsupportedDeviceAndOs
         }
     }

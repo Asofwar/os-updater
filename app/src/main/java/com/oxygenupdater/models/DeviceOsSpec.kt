@@ -32,7 +32,7 @@ value class DeviceOsSpec private constructor(val value: Int) {
 
         /**
          * For devices that aren't running OxygenOS/ColorOS.
-         * This may include OPPO/OnePlus devices with a custom ROM installed.
+         * This may include OPPO/OnePlus/realme devices with a custom ROM installed.
          */
         val UnsupportedDeviceAndOs = DeviceOsSpec(3)
     }

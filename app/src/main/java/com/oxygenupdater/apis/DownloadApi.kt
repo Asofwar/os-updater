@@ -7,7 +7,7 @@ import retrofit2.http.Header
 import retrofit2.http.Streaming
 import retrofit2.http.Url
 
-/** Used for downloading update ZIPs from OPPO/OnePlus/Google OTA servers */
+/** Used for downloading update ZIPs from OPPO/OnePlus/realme/Google OTA servers */
 interface DownloadApi {
 
     @Streaming

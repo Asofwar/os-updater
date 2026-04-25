@@ -1,6 +1,6 @@
 # OS Updater (Android App) ![Android CI][badge-ci] [![latest release][badge-latest-release]][github-ou-releases]
 
-Skip staged rollout queues and update your OPPO/OnePlus device ASAP!
+Skip staged rollout queues and update your OPPO/OnePlus/realme device ASAP!
 
 ## Installation
 
