@@ -20,3 +20,8 @@
 -keepattributes SourceFile,LineNumberTable        # Keep file names and line numbers.
 -keep public class * extends java.lang.Exception  # Optional: Keep custom exceptions.
 # END: Crashlytics suggestions
+
+# DEBUG builds rely on programmatic configuration, see MainActivity just before `setContent { }`
+-assumevalues public class androidx.compose.runtime.ComposeRuntimeFlags {
+    static boolean isLinkBufferComposerEnabled return true;
+}

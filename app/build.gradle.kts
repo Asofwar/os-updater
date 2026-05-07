@@ -20,7 +20,7 @@ fun loadProperties(
     vararg defaults: Pair<String, String>,
 ) = Properties().apply {
     val logger = logger
-    val file = rootProject.file("$name.properties")
+    val file = rootDir.resolve("$name.properties")
     if (!file.exists()) {
         logger.warn("Warning: File '$name.properties' doesn't exist. Creating it with default values.")
         defaults.forEach { setProperty(it.first, it.second) }
@@ -246,6 +246,7 @@ android {
 
             // Tests don't work with minification for some reason
             isMinifyEnabled = false
+            // noinspection NotShrinkingResources
             isShrinkResources = false
         }
     }
@@ -283,10 +284,9 @@ kotlin {
         freeCompilerArgs.addAll(
             // Disable the annoying "Parameter specified as non-null is null" exceptions
             "-Xno-param-assertions",
-            // https://kotlinlang.org/docs/whatsnew21.html#global-warning-suppression
-            "-Xsuppress-warning=NOTHING_TO_INLINE",
-            // Apply (validation) annotations to both value parameter and field: https://youtrack.jetbrains.com/issue/KT-73255
-            "-Xannotation-default-target=param-property",
+            // https://kotlinlang.org/docs/whatsnew22.html#kotlin-compiler-unified-management-of-compiler-warnings
+            // TODO: remove REDUNDANT_VISIBILITY_MODIFIER when `room` adds this annotation to all generated files at the top.
+            "-Xwarning-level=NOTHING_TO_INLINE:disabled,REDUNDANT_VISIBILITY_MODIFIER:disabled",
         )
     }
 }

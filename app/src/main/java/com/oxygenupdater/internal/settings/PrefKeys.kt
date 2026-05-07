@@ -42,6 +42,7 @@ const val KeyFlexibleAppUpdateIgnoreCount = "flexibleAppUpdateIgnoreCount"
 
 // Notifications properties
 const val KeyFirebaseToken = "firebase_token"
+const val KeyFirebaseInstallationId = "firebase_installation_id"
 
 /**
  * Value must not be changed for legacy reasons

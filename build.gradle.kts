@@ -16,7 +16,7 @@ configurations.all {
     }
 }
 
-tasks.register("clean").configure {
+tasks.register(LifecycleBasePlugin.CLEAN_TASK_NAME).configure {
     delete("build")
 }
 

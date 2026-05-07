@@ -18,13 +18,14 @@ jobs:
     if: ${{ !endsWith(github.event.head_commit.message, '[ci skip-debug]') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v5
         with:
           java-version: 17
           distribution: 'temurin'
-      - uses: gradle/actions/setup-gradle@v5
+      - uses: gradle/actions/setup-gradle@v6
         with:
+          dependency-graph: generate-and-submit
           gradle-home-cache-cleanup: true
 
       - name: Build debug and run unit tests
@@ -49,7 +50,7 @@ jobs:
 
       - name: Upload unit test results
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: test-results_${{ steps.ref-sha-suffix.outputs.REF_SHA }}
           compression-level: 9
@@ -78,12 +79,12 @@ jobs:
       # we need a clean snapshot, so we need to exclude it from our defaults.
       EMULATOR_OPTIONS: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v5
         with:
           java-version: 17
           distribution: 'temurin'
-      - uses: gradle/actions/setup-gradle@v5
+      - uses: gradle/actions/setup-gradle@v6
         with:
           gradle-home-cache-cleanup: true
 
@@ -115,7 +116,7 @@ jobs:
           echo "TARGET=$TARGET" >> "$GITHUB_OUTPUT"
 
       - name: AVD cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         id: avd-cache
         with:
           path: |
@@ -149,7 +150,7 @@ jobs:
 
       - name: Upload androidTest results
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           # API-TARGET for uniqueness across matrix
           name: androidTest-results_${{ matrix.api-level }}-${{ steps.determine-target.outputs.TARGET }}

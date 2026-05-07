@@ -446,7 +446,7 @@ class MainViewModel @Inject constructor(
     fun incrementAppUpdateIgnoreCount() = sharedPreferences.incrementInt(KeyFlexibleAppUpdateIgnoreCount)
 
     fun unregisterAppUpdateListener() = appUpdateManager.unregisterListener(flexibleAppUpdateListener)
-    override fun onCleared() = super.onCleared().also {
+    override fun onCleared() {
         unregisterAppUpdateListener()
     }
 

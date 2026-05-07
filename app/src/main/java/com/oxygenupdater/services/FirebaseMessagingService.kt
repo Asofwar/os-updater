@@ -15,6 +15,7 @@ import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import com.oxygenupdater.dao.ArticleDao
 import com.oxygenupdater.extensions.set
+import com.oxygenupdater.internal.settings.KeyFirebaseInstallationId
 import com.oxygenupdater.internal.settings.KeyFirebaseToken
 import com.oxygenupdater.utils.FcmUtils
 import com.oxygenupdater.utils.NotifUtils.NotifElementNewsItemId
@@ -52,9 +53,26 @@ class FirebaseMessagingService : FirebaseMessagingService() {
     @Inject
     lateinit var crashlytics: FirebaseCrashlytics
 
+    /**
+     * Doesn't get called if `firebase_messaging_installation_id_enabled` is enabled in AndroidManifest.xml.
+     *
+     * @see onRegistered
+     */
+    @Deprecated("Deprecated in Java")
     override fun onNewToken(token: String) {
         logDebug(TAG, "Received new Firebase token: $token")
         sharedPreferences[KeyFirebaseToken] = token
+        fcmUtils.resubscribe()
+    }
+
+    /**
+     * Gets called if `firebase_messaging_installation_id_enabled` is enabled in AndroidManifest.xml.
+     *
+     * @since Firebase BOM v34.15.0 (Cloud Messaging v25.1.0).
+     */
+    override fun onRegistered(installationId: String) {
+        logDebug(TAG, "Received new Firebase installation ID: $installationId")
+        sharedPreferences[KeyFirebaseInstallationId] = installationId
         fcmUtils.resubscribe()
     }
 

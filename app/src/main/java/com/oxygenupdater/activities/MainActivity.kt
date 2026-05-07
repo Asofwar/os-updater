@@ -32,8 +32,10 @@ import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ComposeRuntimeFlags
 import androidx.compose.runtime.Composer
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.ExperimentalComposeApi
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
@@ -611,14 +613,14 @@ class MainActivity : AppCompatActivity() {
                             }
                         )
 
-                        val currentLifecycleState = LocalLifecycleOwner.current.lifecycle.currentState
+                        val currentLifecycle = LocalLifecycleOwner.current.lifecycle
                         newsListScreen(
                             navType = navType,
                             windowSize = windowSize,
                             showAds = { showAds },
                         ) {
                             // Manage `dropUnlessResumed` ourselves, because we have an argument to pass
-                            if (currentLifecycleState.isAtLeast(Lifecycle.State.RESUMED)) {
+                            if (currentLifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
                                 backStack.navigate(ArticleRoute(it))
                             }
                         }
@@ -634,7 +636,7 @@ class MainActivity : AppCompatActivity() {
                             windowWidthSize = windowWidthSize,
                         ) {
                             // Manage `dropUnlessResumed` ourselves, because we have an argument to pass
-                            if (currentLifecycleState.isAtLeast(Lifecycle.State.RESUMED)) {
+                            if (currentLifecycle.currentState.isAtLeast(Lifecycle.State.RESUMED)) {
                                 backStack.navigate(it)
                             }
                         }
@@ -1036,6 +1038,10 @@ class MainActivity : AppCompatActivity() {
         } catch (_: IndexOutOfBoundsException) {
             null
         }
+
+        // RELEASE builds rely on configuration via proguard
+        @OptIn(ExperimentalComposeApi::class)
+        if (BuildConfig.DEBUG) ComposeRuntimeFlags.isLinkBufferComposerEnabled = true
 
         // https://kotlinlang.org/docs/whatsnew23.html#compose-compiler-stack-traces-for-minified-android-applications
         Composer.setDiagnosticStackTraceMode(ComposeStackTraceMode.GroupKeys)
