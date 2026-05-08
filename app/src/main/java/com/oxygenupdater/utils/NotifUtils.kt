@@ -1,36 +1,274 @@
 package com.oxygenupdater.utils
 
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationChannelGroup
 import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.PendingIntent.FLAG_IMMUTABLE
+import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
-import android.os.Build
+import android.os.Build.VERSION.SDK_INT
+import android.os.Build.VERSION_CODES
 import androidx.annotation.RequiresApi
 import androidx.annotation.Size
 import androidx.compose.runtime.Immutable
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationCompat.GROUP_ALERT_CHILDREN
+import androidx.core.app.NotificationCompat.PRIORITY_DEFAULT
+import androidx.core.app.NotificationCompat.PRIORITY_HIGH
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import com.oxygenupdater.R
+import com.oxygenupdater.activities.MainActivity
+import com.oxygenupdater.extensions.setBigTextStyle
+import com.oxygenupdater.extensions.tryNotify
+import com.oxygenupdater.internal.NotSet
+import com.oxygenupdater.ui.currentLocale
+import com.oxygenupdater.ui.main.DeepLinkArticle
+import com.oxygenupdater.ui.main.DeepLinkNewsList
+import com.oxygenupdater.ui.main.ExternalArg
+import com.oxygenupdater.ui.main.OuSchemeSuffixed
+import com.oxygenupdater.utils.NotifUtils.NotifTypeGeneral
+import com.oxygenupdater.utils.NotifUtils.NotifTypeNewDevice
+import com.oxygenupdater.utils.NotifUtils.NotifTypeNews
+import com.oxygenupdater.utils.NotifUtils.getNotifId
 import com.oxygenupdater.utils.NotificationChannels.DownloadAndInstallationGroup
 import com.oxygenupdater.utils.NotificationChannels.MiscellaneousGroup
 import com.oxygenupdater.utils.NotificationChannels.PushNotificationsGroup
+import com.oxygenupdater.utils.NotificationChannels.PushNotificationsGroup.DeviceNotifChannelId
+import com.oxygenupdater.utils.NotificationChannels.PushNotificationsGroup.GeneralNotifChannelId
+import com.oxygenupdater.utils.NotificationChannels.PushNotificationsGroup.NewsNotifChannelId
+import com.oxygenupdater.utils.NotificationChannels.PushNotificationsGroup.UpdateNotifChannelId
+import kotlin.random.Random
 
 object NotifUtils {
+
+    const val NotifElementType = "TYPE"
+    const val NotifElementEnglishMessage = "ENGLISH_MESSAGE"
+    const val NotifElementDutchMessage = "DUTCH_MESSAGE"
+    const val NotifElementNewDeviceName = "NEW_DEVICE_NAME"
+    const val NotifElementDeviceName = "DEVICE_NAME"
+    const val NotifElementNewVersionNumber = "NEW_VERSION_NUMBER"
+    const val NotifElementNewsItemId = "NEWS_ITEM_ID"
+    const val NotifElementNewsItemIsBump = "NEWS_ITEM_IS_BUMP"
+    const val NotifElementNewsItemImage = "NEWS_ITEM_IMAGE"
+
+    const val NotifTypeNewDevice = "NEW_DEVICE"
+    const val NotifTypeNewVersion = "NEW_VERSION"
+    const val NotifTypeGeneral = "GENERAL_NOTIFICATION"
+    const val NotifTypeNews = "NEWS"
+
+    inline fun NotificationManagerCompat.handleImmediateNotifs(
+        context: Context,
+        type: String,
+        data: Map<String, String?>,
+        checkNewsRead: () -> Boolean,
+        unknownTypeError: (String) -> Unit,
+    ) {
+        val message = data[
+            if (currentLocale.language.lowercase() == "nl") NotifElementDutchMessage
+            else NotifElementEnglishMessage
+        ]?.trim()
+        val builder = when (type) {
+            NotifTypeNewDevice -> NotificationCompat.Builder(context, DeviceNotifChannelId)
+                .setPriority(PRIORITY_DEFAULT)
+                .setContentTitle(context.getString(R.string.device_notification_channel_name))
+                .setBigTextStyle(
+                    context.getString(
+                        R.string.notification_new_device_text,
+                        data[NotifElementNewDeviceName]?.trim() ?: context.getString(R.string.device_information_unknown),
+                    )
+                )
+
+            NotifTypeNewVersion -> NotificationCompat.Builder(context, UpdateNotifChannelId)
+                .setPriority(PRIORITY_HIGH)
+                .setContentTitle(context.getString(R.string.update_notification_channel_name))
+                .setBigTextStyle(
+                    context.getString(
+                        R.string.notification_version,
+                        data[NotifElementNewVersionNumber]?.trim(),
+                        data[NotifElementDeviceName]?.trim() ?: context.getString(R.string.device_information_unknown),
+                    )
+                )
+
+            NotifTypeNews -> {
+                // Ensure 'bump' notifications are only shown to people who haven't yet read the article. However, only
+                // app versions from v4.1.0 onwards properly support this, even though a broken implementation was added
+                // in v4.0.0 (Kotlin rebuild).
+                if (data[NotifElementNewsItemIsBump]?.toBoolean() == true && checkNewsRead()) return
+
+                // Start with a simple BigTextStyle. Image will be loaded later in a worker.
+                newsNotifBuilder(context, message)
+            }
+
+            else -> {
+                if (type != NotifTypeGeneral) unknownTypeError(
+                    "Unknown notification type: $type, falling back to '$NotifTypeGeneral'"
+                )
+                // General is used as a catch-all channel
+                NotificationCompat.Builder(context, GeneralNotifChannelId)
+                    .setPriority(PRIORITY_DEFAULT)
+                    .setContentTitle(context.getString(R.string.general_notification_channel_name))
+                    .setBigTextStyle(message)
+            }
+        }
+
+        showNotification(context, type, data, builder)
+    }
+
+    fun newsNotifBuilder(
+        context: Context,
+        message: String?,
+    ) = NotificationCompat.Builder(context, NewsNotifChannelId)
+        .setPriority(PRIORITY_HIGH)
+        .setContentTitle(context.getString(R.string.news_notification_channel_name))
+        .setBigTextStyle(message)
+        .setCategory(NotificationCompat.CATEGORY_RECOMMENDATION)
+
+    /**
+     * @return [Int] Notification ID from [getNotifId] for later reuse
+     */
+    fun NotificationManagerCompat.showNotification(
+        context: Context,
+        type: String,
+        data: Map<String, String?>,
+        builder: NotificationCompat.Builder,
+    ) {
+        val newsItemId = data[NotifElementNewsItemId]?.toIntOrNull() ?: 0
+        val notifId = getNotifId(type, newsItemId)
+        val notifGroupKey = getNotifGroupKey(type)
+
+        builder.defaults(
+            context = context,
+            type = type,
+            notifId = notifId,
+            newsItemId = newsItemId,
+        )
+
+        tryNotify(notifId, builder.build())
+
+        // Summary notification is not shown for API < 24 because notification
+        // groups aren't supported anyway (meaning multiple notifications will
+        // be shown separately instead of using InboxStyle to emulate a "group").
+        if (type != NotifTypeNewVersion && SDK_INT >= VERSION_CODES.N) {
+            val summaryNotification = NotificationCompat.Builder(context, notifGroupKey)
+                .setSmallIcon(R.drawable.logo_notification)
+                // Dismiss this notification when all its children are also dismissed
+                .setAutoCancel(true)
+                // Specify which group this notification belongs to
+                .setGroup(notifGroupKey)
+                // Set this notification as the summary for the group
+                .setGroupSummary(true)
+                // Mute this summary notification in favour of children notifications
+                .setGroupAlertBehavior(GROUP_ALERT_CHILDREN)
+                .build()
+
+            tryNotify(getNotifGroupId(type), summaryNotification)
+        }
+    }
+
+    fun newsNotifIntent(newsItemId: Int, context: Context): Intent = Intent(
+        Intent.ACTION_VIEW,
+        // Open article if ID is valid, and mark it "external" so
+        // that interstitial ad is shown after a delay for better UX.
+        // Otherwise, open NewsListScreen.
+        if (newsItemId != NotSet) {
+            "$OuSchemeSuffixed$DeepLinkArticle/$newsItemId?${ExternalArg}=true".toUri()
+        } else (OuSchemeSuffixed + DeepLinkNewsList).toUri(),
+        context,
+        MainActivity::class.java
+    )
+
+    fun NotificationCompat.Builder.defaults(
+        context: Context,
+        type: String,
+        notifId: Int,
+        newsItemId: Int,
+    ) = setSmallIcon(R.drawable.logo_notification)
+        .setAutoCancel(true)
+        .setDefaults(Notification.DEFAULT_ALL)
+        .setColor(ContextCompat.getColor(context, R.color.colorPrimary))
+        .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+        .setContentIntent(
+            notifContentIntent(
+                context, notifId,
+                if (type == NotifTypeNews) newsNotifIntent(
+                    newsItemId, context
+                ) else Intent(context, MainActivity::class.java),
+            )
+        ).apply {
+            if (type != NotifTypeNewVersion) setGroup(getNotifGroupKey(type))
+        }
+
+    fun notifContentIntent(
+        context: Context,
+        notifId: Int,
+        intent: Intent,
+    ): PendingIntent = PendingIntent.getActivity(
+        context, notifId, intent,
+        FLAG_UPDATE_CURRENT or (if (SDK_INT >= VERSION_CODES.S) FLAG_IMMUTABLE else 0),
+    )
+
+    /**
+     * Generates notification IDs from predefined [NotificationIds], but also
+     * guarantees uniqueness for each type that may show multiple notifications:
+     *
+     * - [NotifTypeNews]: add the news item ID to guarantee a unique notification ID
+     * - [NotifTypeNewDevice] & [NotifTypeGeneral]: Since there isn't any ID for
+     *   these notifications, rely on [Random.nextInt]. Upper limit is 100000
+     *   to ensure it never overflows to the next `REMOTE_NOTIFICATION_` value.
+     * - Other notifications are always unique, and should never be grouped
+     */
+    fun getNotifId(type: String, newsItemId: Int) = when (type) {
+        NotifTypeNews -> NotificationIds.RemoteNews
+        NotifTypeNewVersion -> NotificationIds.RemoteNewUpdate
+        NotifTypeNewDevice -> NotificationIds.RemoteNewDevice
+        NotifTypeGeneral -> NotificationIds.RemoteGeneral
+        else -> NotificationIds.RemoteUnknown
+    } + when (type) {
+        NotifTypeNews -> newsItemId
+        NotifTypeNewDevice, NotifTypeGeneral -> Random.nextInt(1, 100000)
+        else -> 0
+    }
+
+    private fun getNotifGroupId(type: String) = when (type) {
+        NotifTypeNewDevice -> NotificationIds.RemoteNewDeviceGroup
+        NotifTypeNews -> NotificationIds.RemoteNewsGroup
+        NotifTypeGeneral -> NotificationIds.RemoteGeneralGroup
+        else -> NotificationIds.RemoteUnknownGroup
+    }
+
+    /**
+     * Used both as a group key, and the channel ID for the summary notification
+     *
+     * @see NotificationCompat.Builder.setGroup
+     */
+    fun getNotifGroupKey(type: String) = when (type) {
+        NotifTypeNewVersion -> UpdateNotifChannelId
+        NotifTypeNews -> NewsNotifChannelId
+        NotifTypeNewDevice -> DeviceNotifChannelId
+        NotifTypeGeneral -> GeneralNotifChannelId
+        else -> GeneralNotifChannelId // default
+    }
 
     private fun NotificationManagerCompat.isDisabled(
         channelId: String,
     ) = !areNotificationsEnabled() || getNotificationChannel(channelId)?.run {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (SDK_INT >= VERSION_CODES.O) {
             importance == NotificationManager.IMPORTANCE_NONE ||
-                    (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && getNotificationChannelGroup(group)?.isBlocked == true)
+                    (SDK_INT >= VERSION_CODES.P && getNotificationChannelGroup(group)?.isBlocked == true)
         } else false
     } == true
 
     fun toNotifStatus(context: Context) = with(NotificationManagerCompat.from(context)) {
         if (areNotificationsEnabled()) NotifStatus(
             listOf(
-                isDisabled(PushNotificationsGroup.UpdateNotifChannelId),
-                isDisabled(PushNotificationsGroup.NewsNotifChannelId),
+                isDisabled(UpdateNotifChannelId),
+                isDisabled(NewsNotifChannelId),
                 isDisabled(DownloadAndInstallationGroup.DownloadStatusNotifChannelId),
             )
         ) else NotifStatus()
@@ -39,7 +277,7 @@ object NotifUtils {
     /**
      * First deletes old channels, then creates current groups & their corresponding channels.
      */
-    @RequiresApi(Build.VERSION_CODES.O)
+    @RequiresApi(VERSION_CODES.O)
     fun refreshNotificationChannels(context: Context) = with(NotificationManagerCompat.from(context)) {
         deleteOldNotificationChannels()
         createAllNotificationGroups(context)
@@ -48,7 +286,7 @@ object NotifUtils {
 
     /** Deletes all old notification channels */
     @Suppress("DEPRECATION")
-    @RequiresApi(Build.VERSION_CODES.O)
+    @RequiresApi(VERSION_CODES.O)
     private inline fun NotificationManagerCompat.deleteOldNotificationChannels() {
         deleteNotificationChannel(NotificationChannels.OldPushNotifChannelId)
         deleteNotificationChannel(NotificationChannels.OldProgressNotifChannelId)
@@ -61,14 +299,14 @@ object NotifUtils {
      *
      * @see NotificationChannels
      */
-    @RequiresApi(Build.VERSION_CODES.O)
+    @RequiresApi(VERSION_CODES.O)
     private inline fun NotificationManagerCompat.createAllNotificationGroups(context: Context) = createNotificationChannelGroups(
         listOf(
             NotificationChannelGroup(
                 DownloadAndInstallationGroup.ID,
                 context.getString(R.string.download_and_installation_notifications_group_name)
             ).apply {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                if (SDK_INT >= VERSION_CODES.P) {
                     description = context.getString(R.string.download_and_installation_notifications_group_description)
                 }
             },
@@ -76,7 +314,7 @@ object NotifUtils {
                 PushNotificationsGroup.ID,
                 context.getString(R.string.push_notifications_group_name)
             ).apply {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                if (SDK_INT >= VERSION_CODES.P) {
                     description = context.getString(R.string.push_notifications_group_description)
                 }
             },
@@ -94,7 +332,7 @@ object NotifUtils {
      * @see PushNotificationsGroup
      * @see MiscellaneousGroup
      */
-    @RequiresApi(Build.VERSION_CODES.O)
+    @RequiresApi(VERSION_CODES.O)
     private inline fun NotificationManagerCompat.createAllNotificationChannels(context: Context) = createNotificationChannels(
         listOf(
             //// BEGIN: DownloadAndInstallationGroup
@@ -126,7 +364,7 @@ object NotifUtils {
 
             //// BEGIN: PushNotificationsGroup
             createNotificationChannel(
-                PushNotificationsGroup.UpdateNotifChannelId,
+                UpdateNotifChannelId,
                 PushNotificationsGroup.ID,
                 context.getString(R.string.update_notification_channel_name),
                 context.getString(R.string.update_notification_channel_description),
@@ -134,7 +372,7 @@ object NotifUtils {
                 vibrationEnabled = true
             ),
             createNotificationChannel(
-                PushNotificationsGroup.NewsNotifChannelId,
+                NewsNotifChannelId,
                 PushNotificationsGroup.ID,
                 context.getString(R.string.news_notification_channel_name),
                 context.getString(R.string.news_notification_channel_description),
@@ -142,14 +380,14 @@ object NotifUtils {
                 vibrationEnabled = true
             ),
             createNotificationChannel(
-                PushNotificationsGroup.DeviceNotifChannelId,
+                DeviceNotifChannelId,
                 PushNotificationsGroup.ID,
                 context.getString(R.string.device_notification_channel_name),
                 context.getString(R.string.device_notification_channel_description),
                 NotificationManager.IMPORTANCE_DEFAULT
             ),
             createNotificationChannel(
-                PushNotificationsGroup.GeneralNotifChannelId,
+                GeneralNotifChannelId,
                 PushNotificationsGroup.ID,
                 context.getString(R.string.general_notification_channel_name),
                 context.getString(R.string.general_notification_channel_description),
@@ -176,7 +414,7 @@ object NotifUtils {
      * @param lightsEnabled defaults to true
      * @param vibrationEnabled defaults to false
      */
-    @RequiresApi(Build.VERSION_CODES.O)
+    @RequiresApi(VERSION_CODES.O)
     private fun createNotificationChannel(
         channelId: String,
         groupId: String,

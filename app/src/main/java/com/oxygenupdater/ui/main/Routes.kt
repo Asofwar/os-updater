@@ -82,7 +82,7 @@ data class ArticleRoute(
     /**
      * Optional, should only be set when opening via notification
      *
-     * @see com.oxygenupdater.workers.DisplayDelayedNotificationWorker.getNotificationIntent
+     * @see com.oxygenupdater.utils.NotifUtils.newsNotifIntent
      */
     val external: Boolean = false,
 ) : ChildRoute {
