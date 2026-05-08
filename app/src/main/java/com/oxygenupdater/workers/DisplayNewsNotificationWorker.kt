@@ -1,6 +1,9 @@
 package com.oxygenupdater.workers
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.os.Build.VERSION.SDK_INT
+import android.os.Build.VERSION_CODES
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.hilt.work.HiltWorker
@@ -9,6 +12,9 @@ import androidx.work.Data
 import androidx.work.WorkerParameters
 import coil3.imageLoader
 import coil3.request.ImageRequest
+import coil3.request.maxBitmapSize
+import coil3.size.Dimension
+import coil3.size.Size
 import coil3.toBitmap
 import com.oxygenupdater.dao.ArticleDao
 import com.oxygenupdater.extensions.tryNotify
@@ -66,13 +72,13 @@ class DisplayNewsNotificationWorker @AssistedInject constructor(
             else NotifElementEnglishMessage
         )?.trim()
 
-        // Update an existing notification when image loads (avoids indefinite waits)
-        // Note: we're setting only the large icon; not changing style to BigPicture
-        //       because that doesn't show full text when expanded like BigText does
+        // Update an existing notification when image loads (avoids indefinite waits).
+        // Note: BigPicture doesn't show as much text as BigText. Long messages will be ellipsized.
         val notifId = getNotifId(type, newsItemId ?: 0)
-        reNotifyWithLargeIcon(
+        reNotifyAsBigPicture(
             notifId = notifId,
             imageUrl = imageUrl,
+            text = message,
             builder = newsNotifBuilder(context, message).defaults(
                 context = context,
                 type = type,
@@ -84,19 +90,40 @@ class DisplayNewsNotificationWorker @AssistedInject constructor(
         return Result.success()
     }
 
-    private fun reNotifyWithLargeIcon(
+    private fun reNotifyAsBigPicture(
         notifId: Int,
         imageUrl: String,
+        text: String?,
         builder: NotificationCompat.Builder,
     ) = context.imageLoader.enqueue(
         ImageRequest.Builder(context)
             .data(imageUrl)
-            .size(Utils.dpToPx(context, 64f).toInt()) // memory optimization
-            .target {
-                notificationManager.tryNotify(
-                    notifId,
-                    builder.setLargeIcon(it.toBitmap()).build()
-                )
+            /**
+             * Fix StrictMode policy violation; ~duration=15 ms Warning: attempt to read pixels from hardware bitmap,
+             * which is very slow operation. Reported during [Bitmap.writeToParcel] for hardware bitmaps. Also
+             * applicable for [Bitmap.copy], [Bitmap.createBitmap], [Bitmap.extractAlpha], [Bitmap.sameAs]:
+             * https://bumptech.github.io/glide/doc/hardwarebitmaps.html#whats-less-efficient-when-we-use-hardware-bitmaps
+             */
+            // commented out because software rendering is slower than hw, need to measure both before committing
+            // .allowHardware(false).bitmapConfig(Bitmap.Config.ARGB_8888)
+            // Memory optimization
+            .maxBitmapSize(Dimension(Utils.dpToPx(context, 500f).toInt()).let {
+                Size(it, it)
+            })
+            .target { image ->
+                val bitmap = image.toBitmap()
+                val bigPictureStyle = NotificationCompat.BigPictureStyle()
+                    .setSummaryText(text)
+                    .bigPicture(bitmap).run {
+                        if (SDK_INT >= VERSION_CODES.S) showBigPictureWhenCollapsed(true)
+                        // Ensure large icon is not shown when in BigPicture expanded state
+                        else bigLargeIcon(null as? Bitmap?) // handled below
+                    }
+
+                notificationManager.tryNotify(notifId, builder.run {
+                    // Fallback for above, show image as large icon when collapsed
+                    if (SDK_INT >= VERSION_CODES.S) this else setLargeIcon(bitmap)
+                }.setStyle(bigPictureStyle).build())
             }.build()
     )
 }
