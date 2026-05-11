@@ -211,7 +211,7 @@
 	<string name="verification_status_notification_channel_name">Статус верификације</string>
 	<string name="installation_status_notification_channel_name">Статус инсталирања</string>
 	<string name="update_notification_channel_name">Ажурирање система доступно</string>
-	<string name="news_notification_channel_name">Објављени чланци</string>
+	<string name="news_notification_channel_name">Новински чланак</string>
 	<string name="device_notification_channel_name">Нови уређај подржан</string>
 	<string name="general_notification_channel_name">Генерално</string>
 	<string name="url_submitted_notification_channel_name">ОТА УРЛ је послат</string>

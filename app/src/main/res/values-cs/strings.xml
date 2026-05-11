@@ -212,7 +212,7 @@ To může být užitečné, pokud chcete:"</string>
 	<string name="verification_status_notification_channel_name">Stav ověření</string>
 	<string name="installation_status_notification_channel_name">Stav instalace</string>
 	<string name="update_notification_channel_name">Aktualizace systému je k dispozici</string>
-	<string name="news_notification_channel_name">Vydán nový článek</string>
+	<string name="news_notification_channel_name">Novinový článek</string>
 	<string name="device_notification_channel_name">Nové podporované zařízení</string>
 	<string name="general_notification_channel_name">Všeobecné</string>
 	<string name="url_submitted_notification_channel_name">Předložená adresa URL OTA</string>

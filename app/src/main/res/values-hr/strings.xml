@@ -214,7 +214,7 @@ Ovo može biti korisno ako želite:"</string>
 	<string name="verification_status_notification_channel_name">Verification status</string>
 	<string name="installation_status_notification_channel_name">Installation status</string>
 	<string name="update_notification_channel_name">"Ažuriranje sistema dostupno"</string>
-	<string name="news_notification_channel_name">News article published</string>
+	<string name="news_notification_channel_name">Novinski članak</string>
 	<string name="device_notification_channel_name">"Novi uređaj podržan"</string>
 	<string name="general_notification_channel_name">General</string>
 	<string name="url_submitted_notification_channel_name">OTA URL dostavljen</string>

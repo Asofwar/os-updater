@@ -212,7 +212,7 @@ Acest lucru poate fi util dacă doriți să:"</string>
 	<string name="verification_status_notification_channel_name">Stadiul verificării</string>
 	<string name="installation_status_notification_channel_name">Stadiul instalării</string>
 	<string name="update_notification_channel_name">Actualizare de sistem disponibilă</string>
-	<string name="news_notification_channel_name">Articol nou publicat</string>
+	<string name="news_notification_channel_name">Articol de știri</string>
 	<string name="device_notification_channel_name">Dispozitiv nou suportat</string>
 	<string name="general_notification_channel_name">General</string>
 	<string name="url_submitted_notification_channel_name">URL-ul OTA trimis</string>

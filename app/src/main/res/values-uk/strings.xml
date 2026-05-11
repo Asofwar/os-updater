@@ -214,7 +214,7 @@
 	<string name="verification_status_notification_channel_name">Стан перевірки</string>
 	<string name="installation_status_notification_channel_name">Стан встановлення</string>
 	<string name="update_notification_channel_name">Доступне оновлення системи</string>
-	<string name="news_notification_channel_name">Опубліковано нову новину</string>
+	<string name="news_notification_channel_name">Новина</string>
 	<string name="device_notification_channel_name">Підтримується новий пристрій</string>
 	<string name="general_notification_channel_name">Загальні</string>
 	<string name="url_submitted_notification_channel_name">Надіслано URL-адресу OTA</string>

@@ -222,7 +222,7 @@
 	<string name="verification_status_notification_channel_name">Verification status</string>
 	<string name="installation_status_notification_channel_name">Installation status</string>
 	<string name="update_notification_channel_name">มีการอัปเดตระบบ</string>
-	<string name="news_notification_channel_name">News article published</string>
+	<string name="news_notification_channel_name">บทความข่าว</string>
 	<string name="device_notification_channel_name">รองรับอุปกรณ์ใหม่</string>
 	<string name="general_notification_channel_name">General</string>
 	<string name="url_submitted_notification_channel_name">ส่ง URL OTA แล้ว</string>

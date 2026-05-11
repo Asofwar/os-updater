@@ -212,7 +212,7 @@ Isso pode ser útil se você quiser:"</string>
 	<string name="verification_status_notification_channel_name">Status de verificação</string>
 	<string name="installation_status_notification_channel_name">Status de instalação</string>
 	<string name="update_notification_channel_name">Atualização do sistema disponível</string>
-	<string name="news_notification_channel_name">Artigo de notícia publicado</string>
+	<string name="news_notification_channel_name">Artigo de notícias</string>
 	<string name="device_notification_channel_name">Novo dispositivo compatível</string>
 	<string name="general_notification_channel_name">Geral</string>
 	<string name="url_submitted_notification_channel_name">URL da OTA enviado</string>

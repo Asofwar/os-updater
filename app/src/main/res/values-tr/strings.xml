@@ -221,7 +221,7 @@ Eğer isterseniz bu faydalı olabilir:"</string>
 	<string name="verification_status_notification_channel_name">Verification status</string>
 	<string name="installation_status_notification_channel_name">Installation status</string>
 	<string name="update_notification_channel_name">Sistem güncellemesi mevcut.</string>
-	<string name="news_notification_channel_name">News article published</string>
+	<string name="news_notification_channel_name">Haber makalesi</string>
 	<string name="device_notification_channel_name">"Yeni cihaz destekleniyor"</string>
 	<string name="general_notification_channel_name">General</string>
 	<string name="url_submitted_notification_channel_name">OTA URL\'si gönderildi</string>

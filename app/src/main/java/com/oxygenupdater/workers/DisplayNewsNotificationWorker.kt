@@ -24,6 +24,7 @@ import com.oxygenupdater.utils.NotifUtils.NotifElementEnglishMessage
 import com.oxygenupdater.utils.NotifUtils.NotifElementNewsItemId
 import com.oxygenupdater.utils.NotifUtils.NotifElementNewsItemImage
 import com.oxygenupdater.utils.NotifUtils.NotifElementNewsItemIsBump
+import com.oxygenupdater.utils.NotifUtils.NotifElementTitle
 import com.oxygenupdater.utils.NotifUtils.NotifElementType
 import com.oxygenupdater.utils.NotifUtils.NotifTypeNews
 import com.oxygenupdater.utils.NotifUtils.defaults
@@ -79,7 +80,11 @@ class DisplayNewsNotificationWorker @AssistedInject constructor(
             notifId = notifId,
             imageUrl = imageUrl,
             text = message,
-            builder = newsNotifBuilder(context, message).defaults(
+            builder = newsNotifBuilder(
+                context = context,
+                title = data.getString(NotifElementTitle),
+                message = message,
+            ).defaults(
                 context = context,
                 type = type,
                 notifId = notifId,

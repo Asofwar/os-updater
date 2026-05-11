@@ -210,7 +210,7 @@
 	<string name="verification_status_notification_channel_name">驗證狀態</string>
 	<string name="installation_status_notification_channel_name">安裝狀態</string>
 	<string name="update_notification_channel_name">系統可更新！</string>
-	<string name="news_notification_channel_name">新文章發布</string>
+	<string name="news_notification_channel_name">新聞報導</string>
 	<string name="device_notification_channel_name">支援新裝置</string>
 	<string name="general_notification_channel_name">一般</string>
 	<string name="url_submitted_notification_channel_name">已提交 OTA 網址</string>

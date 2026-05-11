@@ -224,7 +224,7 @@ Może to być przydatne, jeśli chcesz:"</string>
 	<string name="verification_status_notification_channel_name">Verification status</string>
 	<string name="installation_status_notification_channel_name">Installation status</string>
 	<string name="update_notification_channel_name">Aktualizacja systemu dostępna</string>
-	<string name="news_notification_channel_name">News article published</string>
+	<string name="news_notification_channel_name">Artykuł informacyjny</string>
 	<string name="device_notification_channel_name">Nowa urządzenie obsługiwane</string>
 	<string name="general_notification_channel_name">General</string>
 	<string name="url_submitted_notification_channel_name">Przesłany adres URL OTA</string>

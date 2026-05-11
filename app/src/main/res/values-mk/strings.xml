@@ -212,7 +212,7 @@
 	<string name="verification_status_notification_channel_name">Статус на верификација</string>
 	<string name="installation_status_notification_channel_name">Статус на инсталација</string>
 	<string name="update_notification_channel_name">Достапно е системско ажурирање</string>
-	<string name="news_notification_channel_name">Објавен напис од вести</string>
+	<string name="news_notification_channel_name">Вест</string>
 	<string name="device_notification_channel_name">Подршка на нов уред</string>
 	<string name="general_notification_channel_name">Генерално</string>
 	<string name="url_submitted_notification_channel_name">ОТА URL е испратена</string>

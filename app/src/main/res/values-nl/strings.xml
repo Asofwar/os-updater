@@ -215,7 +215,7 @@ Dit kan handig zijn als je:"</string>
 	<string name="verification_status_notification_channel_name">Verificatiestatus</string>
 	<string name="installation_status_notification_channel_name">Installatiestatus</string>
 	<string name="update_notification_channel_name">Systeemupdate beschikbaar</string>
-	<string name="news_notification_channel_name">Nieuwsartikel gepubliceerd</string>
+	<string name="news_notification_channel_name">Nieuwsbericht</string>
 	<string name="device_notification_channel_name">Nieuw apparaat ondersteund</string>
 	<string name="general_notification_channel_name">Algemeen</string>
 	<string name="url_submitted_notification_channel_name">OTA URL ingediend</string>

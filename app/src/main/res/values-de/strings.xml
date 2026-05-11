@@ -213,7 +213,7 @@ Falls es einen Download Fehler gibt, öffne die App und versuche das Update erne
 	<string name="verification_status_notification_channel_name">Verifikations Status</string>
 	<string name="installation_status_notification_channel_name">Installations Status</string>
 	<string name="update_notification_channel_name">"System Update verfügbar"</string>
-	<string name="news_notification_channel_name">Nachrichtenartikel veröffentlicht</string>
+	<string name="news_notification_channel_name">Nyhedsartikel</string>
 	<string name="device_notification_channel_name">"Neues Gerät unterstützt"</string>
 	<string name="general_notification_channel_name">Allgemein</string>
 	<string name="url_submitted_notification_channel_name">OTA-URL übermittelt</string>

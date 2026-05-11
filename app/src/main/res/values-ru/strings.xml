@@ -203,7 +203,7 @@
 	<string name="verification_status_notification_channel_name">Статус проверки</string>
 	<string name="installation_status_notification_channel_name">Статус установки</string>
 	<string name="update_notification_channel_name">"Доступно обновление"</string>
-	<string name="news_notification_channel_name">Опубликована новостная статья</string>
+	<string name="news_notification_channel_name">Новость</string>
 	<string name="device_notification_channel_name">"Новое поддерживаемое устройство"</string>
 	<string name="general_notification_channel_name">Основной</string>
 	<string name="url_submitted_notification_channel_name">Представлен URL-адрес OTA</string>

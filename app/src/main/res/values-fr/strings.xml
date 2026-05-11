@@ -220,7 +220,7 @@ Cela inclut les notifications de mises à jour systèmes et celles de nouveaux a
 	<string name="verification_status_notification_channel_name">Statut de la vérification</string>
 	<string name="installation_status_notification_channel_name">Statut d\'installation</string>
 	<string name="update_notification_channel_name">"Mise à jour système disponible"</string>
-	<string name="news_notification_channel_name">Nouvel article publié</string>
+	<string name="news_notification_channel_name">Article d\'actualité</string>
 	<string name="device_notification_channel_name">"Nouvel appareil supporté"</string>
 	<string name="general_notification_channel_name">Générales</string>
 	<string name="url_submitted_notification_channel_name">Transmission de l\'URL de l\'OTA</string>

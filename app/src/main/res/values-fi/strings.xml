@@ -214,7 +214,7 @@ Jos latauksessa ilmenee virhe, avaa sovellus ja yritä ladata päivitys uudellee
 	<string name="verification_status_notification_channel_name">Verification status</string>
 	<string name="installation_status_notification_channel_name">Installation status</string>
 	<string name="update_notification_channel_name">"Järjestelmäpäivitys saatavilla"</string>
-	<string name="news_notification_channel_name">News article published</string>
+	<string name="news_notification_channel_name">Uutisartikkeli</string>
 	<string name="device_notification_channel_name">"Uusi laite tuettu"</string>
 	<string name="general_notification_channel_name">General</string>
 	<string name="url_submitted_notification_channel_name">OTA URL-osoite toimitettu</string>

@@ -203,7 +203,7 @@ This can be useful if you want to:"</string>
 	<!-- LocalNotifications strings -->
 	<string name="notification_permission_title">"Stay notified"</string>
 	<string name="notification_permission_text">"Please allow the app to notify you of OTA updates, news, ongoing download status, and other important things. You can fine-tune your preferences later in the app's settings."</string>
-	<string name="notification_new_device_text">The %1$s is now supported. Open the app to choose this device.</string>
+	<string name="notification_new_device_text">%1$s is now supported. Open the app to choose this device.</string>
 	<string name="notification_no_notification_support">Install or update Google Play services to enable push notifications.</string>
 	<string name="notification_version">%1$s is now available for the %2$s!</string>
 	<string name="download_and_installation_notifications_group_name">Download &amp; Installation</string>
@@ -215,7 +215,7 @@ This can be useful if you want to:"</string>
 	<string name="verification_status_notification_channel_name">Verification status</string>
 	<string name="installation_status_notification_channel_name">Installation status</string>
 	<string name="update_notification_channel_name">System update available</string>
-	<string name="news_notification_channel_name">News article published</string>
+	<string name="news_notification_channel_name">News article</string>
 	<string name="device_notification_channel_name">New device supported</string>
 	<string name="general_notification_channel_name">General</string>
 	<string name="url_submitted_notification_channel_name">OTA URL submitted</string>

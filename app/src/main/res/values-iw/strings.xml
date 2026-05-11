@@ -212,7 +212,7 @@
 	<string name="verification_status_notification_channel_name">מצב אימות</string>
 	<string name="installation_status_notification_channel_name">מצב התקנה</string>
 	<string name="update_notification_channel_name">עדכון מערכת חדש זמין למכשירך</string>
-	<string name="news_notification_channel_name">כתבה חדשה פורסמה באפליקציה!</string>
+	<string name="news_notification_channel_name">כתבה חדשותית</string>
 	<string name="device_notification_channel_name">מכשיר חדש נתמך</string>
 	<string name="general_notification_channel_name">כללי</string>
 	<string name="url_submitted_notification_channel_name">כתובת ה-URL של OTA נשלחה</string>

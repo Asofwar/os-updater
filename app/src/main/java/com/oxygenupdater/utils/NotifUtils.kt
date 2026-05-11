@@ -14,6 +14,7 @@ import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES
 import androidx.annotation.RequiresApi
 import androidx.annotation.Size
+import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.GROUP_ALERT_CHILDREN
@@ -48,6 +49,7 @@ import kotlin.random.Random
 object NotifUtils {
 
     const val NotifElementType = "TYPE"
+    const val NotifElementTitle = "TITLE" // added in app v7.2.0, only English
     const val NotifElementEnglishMessage = "ENGLISH_MESSAGE"
     const val NotifElementDutchMessage = "DUTCH_MESSAGE"
     const val NotifElementNewDeviceName = "NEW_DEVICE_NAME"
@@ -69,6 +71,7 @@ object NotifUtils {
         checkNewsRead: () -> Boolean,
         unknownTypeError: (String) -> Unit,
     ) {
+        val title = data[NotifElementTitle]?.trim() // added in app v7.2.0, only English
         val message = data[
             if (currentLocale.language.lowercase() == "nl") NotifElementDutchMessage
             else NotifElementEnglishMessage
@@ -76,7 +79,7 @@ object NotifUtils {
         val builder = when (type) {
             NotifTypeNewDevice -> NotificationCompat.Builder(context, DeviceNotifChannelId)
                 .setPriority(PRIORITY_DEFAULT)
-                .setContentTitle(context.getString(R.string.device_notification_channel_name))
+                .setTitleSubtext(context, title, R.string.device_notification_channel_name)
                 .setBigTextStyle(
                     context.getString(
                         R.string.notification_new_device_text,
@@ -86,7 +89,7 @@ object NotifUtils {
 
             NotifTypeNewVersion -> NotificationCompat.Builder(context, UpdateNotifChannelId)
                 .setPriority(PRIORITY_HIGH)
-                .setContentTitle(context.getString(R.string.update_notification_channel_name))
+                .setTitleSubtext(context, title, R.string.update_notification_channel_name)
                 .setBigTextStyle(
                     context.getString(
                         R.string.notification_version,
@@ -102,7 +105,11 @@ object NotifUtils {
                 if (data[NotifElementNewsItemIsBump]?.toBoolean() == true && checkNewsRead()) return
 
                 // Start with a simple BigTextStyle. Image will be loaded later in a worker.
-                newsNotifBuilder(context, message)
+                newsNotifBuilder(
+                    context = context,
+                    title = title,
+                    message = message,
+                )
             }
 
             else -> {
@@ -112,7 +119,7 @@ object NotifUtils {
                 // General is used as a catch-all channel
                 NotificationCompat.Builder(context, GeneralNotifChannelId)
                     .setPriority(PRIORITY_DEFAULT)
-                    .setContentTitle(context.getString(R.string.general_notification_channel_name))
+                    .setTitleSubtext(context, title, R.string.general_notification_channel_name)
                     .setBigTextStyle(message)
             }
         }
@@ -122,12 +129,28 @@ object NotifUtils {
 
     fun newsNotifBuilder(
         context: Context,
+        title: String?,
         message: String?,
     ) = NotificationCompat.Builder(context, NewsNotifChannelId)
         .setPriority(PRIORITY_HIGH)
-        .setContentTitle(context.getString(R.string.news_notification_channel_name))
+        .setTitleSubtext(context, title, R.string.news_notification_channel_name)
         .setBigTextStyle(message)
         .setCategory(NotificationCompat.CATEGORY_RECOMMENDATION)
+
+    /**
+     * Primarily only for news notifications, but configured for all notifications,
+     * in case we decide to use it for those as well, in the future.
+     *
+     * Added in app v7.2.0. The `if` branch acts as the fallback to preserve older/default behaviour.
+     */
+    inline fun NotificationCompat.Builder.setTitleSubtext(
+        context: Context,
+        title: String?,
+        @StringRes subtextResId: Int,
+    ) = if (title.isNullOrEmpty()) setContentTitle(context.getString(subtextResId)) else {
+        setContentTitle(title)
+        setSubText(context.getString(subtextResId))
+    }
 
     /**
      * @return [Int] Notification ID from [getNotifId] for later reuse
@@ -526,7 +549,7 @@ object NotificationChannels {
         const val UpdateNotifChannelId = "$ChannelPrefix.update"
 
         /**
-         * Name: News article published
+         * Name: News article
          * Description: Get notified when we publish a news article
          */
         const val NewsNotifChannelId = "$ChannelPrefix.news"

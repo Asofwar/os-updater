@@ -215,7 +215,7 @@ Det kan være nyttigt, hvis du vil:"</string>
 	<string name="verification_status_notification_channel_name">Verifikationsstatus</string>
 	<string name="installation_status_notification_channel_name">Installationsstatus</string>
 	<string name="update_notification_channel_name">Systemopdatering tilgængelig</string>
-	<string name="news_notification_channel_name">Nyhedsartikel er udgivet</string>
+	<string name="news_notification_channel_name">Nyhedsartikel</string>
 	<string name="device_notification_channel_name">Ny enhed understøttet</string>
 	<string name="general_notification_channel_name">Generelt</string>
 	<string name="url_submitted_notification_channel_name">OTA URL indsendt</string>

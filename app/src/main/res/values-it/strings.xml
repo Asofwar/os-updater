@@ -210,7 +210,7 @@ Se è stato riscontrato un errore, apri l'app e ritenta il download. Assicurati 
 	<string name="verification_status_notification_channel_name">Stato della verifica</string>
 	<string name="installation_status_notification_channel_name">Stato dell\'installazione</string>
 	<string name="update_notification_channel_name">"Aggiornamento sistema disponibile."</string>
-	<string name="news_notification_channel_name">Articolo pubblicato</string>
+	<string name="news_notification_channel_name">Articolo di cronaca</string>
 	<string name="device_notification_channel_name">"Nuovo dispositivo supportato"</string>
 	<string name="general_notification_channel_name">Generali</string>
 	<string name="url_submitted_notification_channel_name">URL OTA inviato</string>
