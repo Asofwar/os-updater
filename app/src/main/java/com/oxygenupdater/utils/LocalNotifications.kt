@@ -54,6 +54,7 @@ object LocalNotifications {
 
         val notification = NotificationCompat.Builder(context, OtaUrlSubmittedNotifChannelId)
             .setSmallIcon(R.drawable.logo_notification)
+            .setSubText(context.getString(R.string.url_submitted_notification_channel_name))
             .setContentTitle(title)
             .setContentText(text)
             .setContentIntent(contentIntent)
@@ -91,6 +92,7 @@ object LocalNotifications {
 
         val notification = NotificationCompat.Builder(context, DownloadStatusNotifChannelId)
             .setSmallIcon(R.drawable.download)
+            .setSubText(context.getString(R.string.download_status_notification_channel_name))
             .setContentTitle(title)
             .setContentText(text)
             .setContentIntent(contentIntent)
@@ -130,6 +132,7 @@ object LocalNotifications {
 
         val notification = NotificationCompat.Builder(context, DownloadStatusNotifChannelId)
             .setSmallIcon(R.drawable.download)
+            .setSubText(context.getString(R.string.download_status_notification_channel_name))
             .setContentTitle(context.getString(R.string.download_failed))
             .setBigTextStyle(context.getString(notificationMessage))
             .setContentIntent(contentIntent)
@@ -153,6 +156,7 @@ object LocalNotifications {
 
         val notification = NotificationCompat.Builder(context, VerificationStatusNotifChannelId)
             .setSmallIcon(R.drawable.logo_notification)
+            .setSubText(context.getString(R.string.verification_status_notification_channel_name))
             .setContentTitle(title)
             .setBigTextStyle(text)
             .setOngoing(false)
@@ -174,6 +178,7 @@ object LocalNotifications {
     fun showVerifyingNotification(context: Context) {
         val notification = NotificationCompat.Builder(context, VerificationStatusNotifChannelId)
             .setSmallIcon(R.drawable.logo_notification)
+            .setSubText(context.getString(R.string.verification_status_notification_channel_name))
             .setContentTitle(context.getString(R.string.download_verifying))
             .setProgress(100, 50, true)
             .setOngoing(true)

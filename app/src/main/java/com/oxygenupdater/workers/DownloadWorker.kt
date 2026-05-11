@@ -152,6 +152,7 @@ class DownloadWorker @AssistedInject constructor(
 
         notification = NotificationCompat.Builder(context, DownloadStatusNotifChannelId)
             .setSmallIcon(R.drawable.logo_notification)
+            .setSubText(context.getString(R.string.download_status_notification_channel_name))
             .setContentTitle(UpdateDataVersionFormatter.getFormattedVersionNumber(updateData))
             .setContentText(text)
             .setProgress(100, 50, true)
@@ -188,6 +189,7 @@ class DownloadWorker @AssistedInject constructor(
 
         notification = NotificationCompat.Builder(context, DownloadStatusNotifChannelId)
             .setSmallIcon(android.R.drawable.stat_sys_download)
+            .setSubText(context.getString(R.string.download_status_notification_channel_name))
             .setContentTitle(UpdateDataVersionFormatter.getFormattedVersionNumber(updateData))
             .setContentText(text)
             .setProgress(100, progress, false)
@@ -215,6 +217,7 @@ class DownloadWorker @AssistedInject constructor(
         context, VerificationStatusNotifChannelId
     )
         .setSmallIcon(R.drawable.logo_notification)
+        .setSubText(context.getString(R.string.verification_status_notification_channel_name))
         .setContentTitle(context.getString(R.string.download_verifying))
         .setProgress(100, 50, true)
         .setOngoing(true)
