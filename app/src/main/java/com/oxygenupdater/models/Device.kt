@@ -63,7 +63,7 @@ data class Device(
         }
 
         @VisibleForTesting
-        const val ImageUrlSuffix = "-min.png?v=1"
+        const val ImageUrlSuffix = "-min.webp?v=1"
 
         fun constructImageUrl(deviceName: String) = ImageUrlPrefix +
                 deviceName.split("(", limit = 2)[0].trim().replace(' ', '-').lowercase() +
