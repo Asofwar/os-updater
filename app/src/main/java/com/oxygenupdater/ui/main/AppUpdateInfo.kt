@@ -9,7 +9,7 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.collection.IntIntPair
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.rememberUpdatedState
 import com.google.android.play.core.install.model.ActivityResult.RESULT_IN_APP_UPDATE_FAILED
 import com.google.android.play.core.install.model.InstallStatus
@@ -70,14 +70,14 @@ fun AppUpdateInfo(
         UpdateAvailability.UPDATE_AVAILABLE -> {
             // Must be called inside an effect to avoid IllegalStateException: Launcher has not been initialized
             val callback = rememberUpdatedState(requestUpdate)
-            LaunchedEffect(launcher) { callback.value(launcher) }
+            SideEffect(launcher) { callback.value(launcher) }
         }
 
         UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS -> {
             // Must be called inside an effect to avoid IllegalStateException: Launcher has not been initialized
             val callback = rememberUpdatedState(requestImmediateUpdate)
             // If an IMMEDIATE update is in the stalled state, we should resume it
-            LaunchedEffect(launcher) { callback.value(launcher) }
+            SideEffect(launcher) { callback.value(launcher) }
         }
 
         else -> {}

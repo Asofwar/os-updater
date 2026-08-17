@@ -16,8 +16,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -196,7 +197,7 @@ private fun RefreshAwareWebView(
     onError: (String) -> Unit,
     onLoadFinished: () -> Unit,
 ) {
-    LaunchedEffect(url) { webViewState.webView?.loadUrl(url) }
+    SideEffect(url) { webViewState.webView?.loadUrl(url) }
 
     val loading = webViewState.loadingState
     val paddingTop = if (showDivider) Modifier.padding(top = 13.dp) else Modifier
@@ -210,8 +211,10 @@ private fun RefreshAwareWebView(
         val error = webViewState.errorForCurrentRequest?.errorCodeString
 
         // Ensure finished & error callbacks are done just once per load
-        LaunchedEffect(error) {
-            if (error == null) onLoadFinished() else onError(error)
+        val onLoadFinishedState by rememberUpdatedState(onLoadFinished)
+        val onErrorState by rememberUpdatedState(onError)
+        SideEffect(error) {
+            if (error == null) onLoadFinishedState() else onErrorState(error)
         }
 
         if (showDivider) HorizontalDivider(modifierDefaultPaddingTop)

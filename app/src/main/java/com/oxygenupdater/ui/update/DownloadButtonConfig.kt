@@ -8,7 +8,9 @@ import androidx.annotation.VisibleForTesting
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -133,8 +135,9 @@ fun downloadButtonConfig(
             if (downloadStatus == DownloadCompleted) return@also
 
             // Open install guide automatically, but only after the normal download flow completes
-            LaunchedEffect(Unit) {
-                if (previousProgress != null) openInstallGuide()
+            val openInstallGuideState by rememberUpdatedState(openInstallGuide)
+            SideEffect(Unit) {
+                if (previousProgress != null) openInstallGuideState()
                 previousProgress = null
                 previousProgressText = null
             }
@@ -200,7 +203,7 @@ fun downloadButtonConfig(
                             type = RichTextType.Html,
                         )
                     )
-                    LaunchedEffect(Unit) { logDownloadError() }
+                    SideEffect(Unit, effect = logDownloadError)
                 }
 
                 DownloadFailure.NullUpdateDataOrDownloadUrl.value,

@@ -6,7 +6,7 @@ import android.os.Build
 import android.provider.Settings
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
@@ -39,7 +39,7 @@ fun NotificationPermission(
     }
 
     val status = state.status
-    LaunchedEffect(status) {
+    SideEffect(status) {
         when (status) {
             is PermissionStatus.Denied -> if (status.shouldShowRationale) showSheet = true else {
                 // Must be called inside an effect to avoid IllegalStateException: ActivityResultLauncher cannot be null

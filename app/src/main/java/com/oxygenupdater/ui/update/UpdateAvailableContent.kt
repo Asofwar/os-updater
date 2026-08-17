@@ -46,7 +46,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -475,7 +475,7 @@ private fun DownloadButton(
             val successful = downloadStatus.successful
             if (inProgress) {
                 var atEnd by rememberState(false)
-                LaunchedEffect(Unit) { atEnd = true /* start immediately */ } // run only on init
+                SideEffect(Unit) { atEnd = true /* start immediately */ } // run only on init
 
                 Icon(
                     painter = rememberAnimatedVectorPainter(

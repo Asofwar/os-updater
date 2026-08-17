@@ -34,6 +34,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -362,7 +363,7 @@ private fun scrollbarThumbColor(
     val hovered by interactionSource.collectIsHoveredAsState()
     val dragged by interactionSource.collectIsDraggedAsState()
     val active = pressed || hovered || dragged
-    LaunchedEffect(active) {
+    SideEffect(active) {
         state = if (active) Active.value else Inactive.value
 
         // if (active) state = Active.value else if (state == Active.value) {

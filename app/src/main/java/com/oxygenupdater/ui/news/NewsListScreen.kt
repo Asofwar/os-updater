@@ -49,6 +49,7 @@ import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableIntState
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -147,7 +148,7 @@ fun NewsListScreen(
     val data = if (onlyUnread) state.data.filterNot { it.readState } else state.data
     val list = if (!refreshing) rememberSaveable(data) { data } else data
 
-    LaunchedEffect(onlyUnread) {
+    SideEffect(onlyUnread) {
         unreadCountState.intValue = if (onlyUnread) list.size else list.count { !it.readState }
     }
 

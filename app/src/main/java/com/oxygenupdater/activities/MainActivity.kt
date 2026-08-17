@@ -37,12 +37,13 @@ import androidx.compose.runtime.Composer
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.ExperimentalComposeApi
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.referentialEqualityPolicy
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.runtime.tooling.ComposeStackTraceMode
@@ -319,7 +320,7 @@ class MainActivity : AppCompatActivity() {
     @Composable
     private inline fun PassthroughEnabledDevicesToSettingsViewModel(enabledDevices: List<Device>?) {
         if (enabledDevices == null) return
-        LaunchedEffect(enabledDevices) {
+        SideEffect(enabledDevices) {
             settingsViewModel.fetchEnabledDevices(enabledDevices)
         }
     }
@@ -425,9 +426,7 @@ class MainActivity : AppCompatActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     private fun Content(windowSize: WindowSizeClass) {
-        LaunchedEffect(Unit) { // run only on init
-            viewModel.fetchServerMessages()
-        }
+        SideEffect(Unit, effect = viewModel::fetchServerMessages) // run only on init
 
         val showDeviceBadge = viewModel.deviceOsSpec.let {
             it != null && it != DeviceOsSpec.SupportedDeviceAndOs
@@ -775,9 +774,10 @@ class MainActivity : AppCompatActivity() {
         showAds: () -> Boolean,
         openArticle: (Long) -> Unit,
     ) = surfacedEntry<MainRoute.NewsList> {
-        LaunchedEffect(Unit) {
+        val showAdsState by rememberUpdatedState(showAds)
+        SideEffect(Unit) {
             // Eagerly load an interstitial ad to eventually show when clicking on an item
-            if (showAds()) loadInterstitialAd(InterstitialAdLoadType.LoadOnly)
+            if (showAdsState()) loadInterstitialAd(InterstitialAdLoadType.LoadOnly)
         }
 
         val state by newsListViewModel.state.collectAsStateWithLifecycle()
@@ -1066,10 +1066,7 @@ class MainActivity : AppCompatActivity() {
                                 return@Crossfade // we shouldn't be here; exit
                             }
 
-                            DisposableEffect(Unit) {
-                                setupUmp()
-                                onDispose {}
-                            }
+                            SideEffect(Unit, effect = ::setupUmp)
 
                             if (SDK_INT >= VERSION_CODES.TIRAMISU) NotificationPermission(
                                 canShow = viewModel.canShowNotifPermissionSheet,

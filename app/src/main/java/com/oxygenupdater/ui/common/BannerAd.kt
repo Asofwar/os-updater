@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -101,10 +101,10 @@ fun ColumnScope.BannerAd(
         }
     }
 
-    LaunchedEffect(forceAdReload) {
+    SideEffect(forceAdReload) {
         if (loaded || adView.isLoading) {
             logDebug(TAG, "Skipping load, previous is pending (loaded=$loaded, adViewIsLoading: ${adView.isLoading})")
-            return@LaunchedEffect
+            return@SideEffect
         }
 
         logDebug(TAG, "Loading")
