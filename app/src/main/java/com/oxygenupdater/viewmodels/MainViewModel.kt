@@ -24,6 +24,7 @@ import androidx.work.ExperimentalWorkRequestBuilderApi
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
+import androidx.work.WorkInfo
 import androidx.work.WorkInfo.State
 import androidx.work.WorkManager
 import androidx.work.WorkRequest.Companion.MIN_BACKOFF_MILLIS
@@ -189,7 +190,36 @@ class MainViewModel @Inject constructor(
     val workInfoWithStatus = workManager.getWorkInfosForUniqueWorkFlow(WorkUniqueDownload).map { info ->
         val infoAndStatus = info.firstOrNull()?.let {
             val status = when (it.state) {
-                State.ENQUEUED, State.BLOCKED -> DownloadStatus.DownloadQueued
+                State.ENQUEUED -> if (it.stopReason == WorkInfo.STOP_REASON_CANCELLED_BY_APP) {
+                    /**
+                     * Required to workaround https://issuetracker.google.com/issues/552283281: a re-cancel is required
+                     * because WorkManager currently erroneously re-enqueues a user/app-cancelled job if
+                     * [androidx.work.WorkRequest.Builder.setBackoffForSystemInterruptions] is used.
+                     */
+                    lastDownloadStatus?.let { last ->
+                        when (last) {
+                            /**
+                             * Note: sometimes WorkManager transitions directly to [DownloadStatus.Downloading]
+                             * after pausing/cancelling, so we check for that as well here. We already guard this block
+                             * with [WorkInfo.stopReason] above so it should be fine.
+                             */
+                            DownloadStatus.Downloading -> {
+                                workManager.cancelUniqueWork(WorkUniqueDownload)
+                                val pause = cancelShouldPauseDownload.get()
+                                if (pause) DownloadStatus.DownloadPaused else DownloadStatus.NotDownloading
+                            }
+
+                            /** These functions internally update [cancelShouldPauseDownload] */
+                            DownloadStatus.DownloadPaused -> last.also { pauseDownloadWork() }
+                            DownloadStatus.NotDownloading -> last.also { cancelDownloadWork() }
+
+                            else -> DownloadStatus.DownloadQueued
+                        }
+                    } ?: DownloadStatus.DownloadQueued
+                } else DownloadStatus.DownloadQueued
+
+                State.BLOCKED -> DownloadStatus.DownloadQueued
+
                 State.RUNNING -> when (it.progress.getInt(WorkDataDownloadProgress, 0)) {
                     NotSet -> DownloadStatus.Verifying
                     else -> DownloadStatus.Downloading
@@ -297,9 +327,13 @@ class MainViewModel @Inject constructor(
     )
 
     fun cancelDownloadWork(context: Context, filename: String?) {
+        cancelDownloadWork()
+        deleteDownloadedFile(context, filename)
+    }
+
+    private fun cancelDownloadWork() {
         cancelShouldPauseDownload.set(false) // make work's CANCELLED state map to DownloadStatus.NOT_DOWNLOADING
         workManager.cancelUniqueWork(WorkUniqueDownload)
-        deleteDownloadedFile(context, filename)
     }
 
     fun pauseDownloadWork() {
