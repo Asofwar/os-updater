@@ -68,8 +68,8 @@ jobs:
       matrix:
         # Should ideally be min (23) & target SDK (36), but:
         # - API 21 always fails with `InstallException: INSTALL_FAILED_DEXOPT`.
-        # - ATDs are supported only from API 30 — 35
-        api-level: [ 23, 35 ]
+        # - ATDs are supported only from API 30 — 36
+        api-level: [ 23, 36 ]
     env:
       # Used in `reactivecircus/android-emulator-runner` steps. Default:
       # `-no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim`.
@@ -101,7 +101,7 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      # Use Automated Test Devices on API 30 — 33 for better runtime performance
+      # Use Automated Test Devices on API 30+ for better runtime performance
       # https://developer.android.com/studio/test/gradle-managed-devices#gmd-atd
       - name: Determine emulator target
         id: determine-target
