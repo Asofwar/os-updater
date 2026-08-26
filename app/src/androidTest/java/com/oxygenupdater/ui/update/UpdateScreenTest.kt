@@ -59,7 +59,10 @@ class UpdateScreenTest : UsesSharedPreferencesTest() {
             systemIsUpToDate = false,
         )
         common_upToDate(R.string.update_information_no_update_data_available)
+    }
 
+    @Test
+    fun updateScreen_upToDate_noAdvancedMode() {
         /** Condition 3: [UpdateData.systemIsUpToDate] == true & advanced mode is disabled */
         data = UpdateData(
             id = 1,
@@ -68,6 +71,8 @@ class UpdateScreenTest : UsesSharedPreferencesTest() {
             systemIsUpToDate = true,
         )
         currentGetPrefBool = { key, default -> if (key == KeyAdvancedMode) false else default }
+        setContent(true)
+
         common_upToDate(R.string.update_information_system_is_up_to_date)
     }
 
@@ -80,9 +85,13 @@ class UpdateScreenTest : UsesSharedPreferencesTest() {
             updateInformationAvailable = true,
             systemIsUpToDate = false,
         ); setContent(true)
-        advanceFrame(); assertBadge("new")
-        common_updateAvailable(R.string.update_notification_channel_name)
 
+        assertBadge("new")
+        common_updateAvailable(R.string.update_notification_channel_name)
+    }
+
+    @Test
+    fun updateScreen_updateAvailable_advancedMode() {
         /** [UpdateData.systemIsUpToDate] == true & advanced mode is enabled */
         data = UpdateData(
             id = 1,
@@ -91,7 +100,9 @@ class UpdateScreenTest : UsesSharedPreferencesTest() {
             systemIsUpToDate = true,
         )
         currentGetPrefBool = { key, default -> if (key == KeyAdvancedMode) true else default }
-        advanceFrame(); assertBadge(null)
+        setContent(true)
+
+        assertBadge(null)
         common_updateAvailable(R.string.update_information_header_advanced_mode_hint)
     }
 
