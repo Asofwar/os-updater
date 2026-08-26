@@ -6,6 +6,7 @@ import androidx.compose.ui.semantics.SemanticsConfiguration
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.SemanticsPropertyKey
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.SemanticsNodeInteractionCollection
@@ -48,31 +49,21 @@ fun SemanticsNodeInteraction.assertHasSemanticsKey(
 ) = assert(SemanticsMatcher.keyIsDefined(key))
 
 /** @return children [SemanticsNodeInteractionCollection] */
-fun SemanticsNodeInteraction.validateLazyColumn(itemCount: Int) = onChildren().also {
-    val nodes = it.fetchSemanticsNodes()
-
-    /**
-     * Ensure size is what we expect, to make sure we're populating LazyColumn properly.
-     * However, as lazy lists don't present all children at once, we can't use the same
-     * comparison logic as in [validateColumnLayout]. Instead, we ensure size is at max
-     * [itemCount].
-     *
-     * Note: we can't assert against [androidx.compose.ui.semantics.CollectionInfo.rowCount]
-     * because [androidx.compose.foundation.lazy.LazyLayoutSemanticState] always defines
-     * rows/columns as -1 for lazy lists. This is weird, because RecyclerView always took
-     * row/column counts from the adapter, which made testing easier.
-     *
-     * See https://issuetracker.google.com/issues/320397497.
-     */
-    assert(nodes.size <= itemCount) {
-        "Lazy children count expected to be $itemCount max. Actual: ${nodes.size}."
+fun SemanticsNodeInteraction.validateLazyColumn(itemCount: Int): SemanticsNodeInteractionCollection {
+    assertHasSemanticsKey(SemanticsProperties.CollectionInfo)
+    val collectionInfo = fetchSemanticsNode().config.getOrNull(SemanticsProperties.CollectionInfo)!!
+    val rowCount = collectionInfo.rowCount
+    assert(rowCount == itemCount) {
+        "Lazy children count expected to be $itemCount. Actual: $rowCount."
     }
 
-    // Validate children's column placement
-    nodes.validateColumnLayout()
+    return onChildren().also {
+        // Validate children's column placement
+        it.fetchSemanticsNodes().validateColumnLayout()
 
-    // LazyColumn must be scrollable
-    assertHasScrollAction()
+        // LazyColumn must be scrollable
+        assertHasScrollAction()
+    }
 }
 
 /**
