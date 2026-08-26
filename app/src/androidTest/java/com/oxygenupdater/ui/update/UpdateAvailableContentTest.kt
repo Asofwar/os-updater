@@ -134,7 +134,7 @@ class UpdateAvailableContentTest : ComposeBaseTest() {
 
         columns[0].onChildren().run {
             // Version
-            get(0).onChild().assertHasTextExactly(
+            get(0).assertHasTextExactly(
                 UpdateDataVersionFormatter.getFormattedVersionNumber(updateData, "").takeIf {
                     it.isNotBlank() && it != "-" && it != "null"
                 } ?: activity.getString(
@@ -147,7 +147,7 @@ class UpdateAvailableContentTest : ComposeBaseTest() {
         }
 
         val children = columns[1 - zeroIfExpanded].onChildren().run {
-            assertCountEquals(zeroIfExpanded + if (updateData.systemIsUpToDate) 3 else 2)
+            assertCountEquals(zeroIfExpanded + if (updateData.systemIsUpToDate) 4 else 3)
         }
 
         // Advanced mode reminder
@@ -155,19 +155,15 @@ class UpdateAvailableContentTest : ComposeBaseTest() {
             activity.getString(R.string.update_information_header_advanced_mode_helper, UpdateMethod),
         )
 
-        val lastChild = children.onLast()
-
         /** Must be done before the [VerificationFailed] test */
-        lastChild.onChildren().run {
-            // Filename
-            get(0).assertHasTextExactly(
-                activity.getString(R.string.update_information_file_name, updateData.filename),
-            )
-            // MD5
-            get(1).assertHasTextExactly(
-                activity.getString(R.string.update_information_md5, updateData.md5sum),
-            )
-        }
+        // Filename
+        children[zeroIfExpanded + 2].assertHasTextExactly(
+            activity.getString(R.string.update_information_file_name, updateData.filename),
+        )
+        // MD5
+        children[zeroIfExpanded + 3].assertHasTextExactly(
+            activity.getString(R.string.update_information_md5, updateData.md5sum),
+        )
 
         // Download button
         (if (expanded) children[0] else columns[1]).run {
@@ -184,7 +180,7 @@ class UpdateAvailableContentTest : ComposeBaseTest() {
         }
 
         /** After the [VerificationFailed] test, the last child will be [DownloadLink] */
-        lastChild.run {
+        children.onLast().run {
             downloadStatus = VerificationFailed; ensureDownloadLinkShown()
 
             /** Now we also test for [DownloadFailed] for all [failureType]s */
