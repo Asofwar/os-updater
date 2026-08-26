@@ -11,11 +11,12 @@ import org.junit.Test
 
 class AppUpdateInfoTest : ComposeBaseTest() {
 
+    private var status by mutableStateOf(InstallStatus.DOWNLOADING)
+    private var availability by mutableStateOf(UpdateAvailability.UPDATE_AVAILABLE)
+    private var snackbarText: IntIntPair? = null
+
     @Test
     fun appUpdateInfo() {
-        var status by mutableStateOf(InstallStatus.DOWNLOADED)
-        var availability by mutableStateOf(UpdateAvailability.UPDATE_AVAILABLE)
-        var snackbarText: IntIntPair? = null
         setContent(true) {
             AppUpdateInfo(
                 status = status,
@@ -40,34 +41,34 @@ class AppUpdateInfoTest : ComposeBaseTest() {
             )
         }
 
-        /** First we test for the initial value of status = [InstallStatus.DOWNLOADED] */
-        snackbarText.check(AppUpdateDownloadedSnackbarData)
-        ensureCallbackInvokedExactlyOnce("unregisterAppUpdateListener")
-
-        /** Then for initial value of availability = [UpdateAvailability.UPDATE_AVAILABLE] */
-        status = InstallStatus.DOWNLOADING
-        advanceFrame()
+        /** First we test for the initial value of status = [InstallStatus.DOWNLOADING] */
         snackbarText.check(null) // should be dismissed
         ensureCallbackInvokedExactlyOnce("requestUpdate")
 
         // Then for other values
-        availability = UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS
-        advanceFrame()
-        snackbarText.check(null) // should not change
-        ensureCallbackInvokedExactlyOnce("requestImmediateUpdate")
+        validateForOtherUpdateAvailabilities(
+            UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS,
+            "requestImmediateUpdate",
+        )
+        validateForOtherUpdateAvailabilities(UpdateAvailability.UPDATE_NOT_AVAILABLE)
+        validateForOtherUpdateAvailabilities(UpdateAvailability.UNKNOWN)
 
-        availability = UpdateAvailability.UPDATE_NOT_AVAILABLE
-        advanceFrame()
-        snackbarText.check(null)
-        ensureNoCallbacksWereInvoked()
-
-        availability = UpdateAvailability.UNKNOWN
-        advanceFrame()
-        snackbarText.check(null)
-        ensureNoCallbacksWereInvoked()
+        /** Then for the status = [InstallStatus.DOWNLOADED] */
+        status = InstallStatus.DOWNLOADED
+        advanceFrame(); snackbarText.check(AppUpdateDownloadedSnackbarData)
+        ensureCallbackInvokedExactlyOnce("unregisterAppUpdateListener")
     }
 
-    private fun IntIntPair?.check(actual: IntIntPair?) = assert(this == actual) {
-        "Snackbar text did not match. Expected: $this, actual: $actual."
+    private fun validateForOtherUpdateAvailabilities(
+        @UpdateAvailability newAvailability: Int,
+        callbackToCheck: String? = null,
+    ) {
+        availability = newAvailability
+        advanceFrame(); snackbarText.check(null) // should not change
+        callbackToCheck?.let { ensureCallbackInvokedExactlyOnce(it) } ?: ensureNoCallbacksWereInvoked()
+    }
+
+    private fun IntIntPair?.check(expected: IntIntPair?) = assert(this == expected) {
+        "Snackbar text did not match. Expected: $expected, actual: $this."
     }
 }
