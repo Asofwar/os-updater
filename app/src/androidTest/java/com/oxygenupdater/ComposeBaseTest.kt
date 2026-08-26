@@ -9,7 +9,7 @@ import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.hasTextExactly
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.core.content.getSystemService
 import com.oxygenupdater.ui.theme.PreviewAppTheme
 import org.junit.After
