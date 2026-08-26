@@ -2,6 +2,7 @@ package com.oxygenupdater.ui.device
 
 import android.os.Build
 import androidx.annotation.StringRes
+import androidx.collection.emptyScatterMap
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,6 +47,7 @@ class DeviceScreenTest : ComposeBaseTest() {
                 deviceName = DefaultDeviceName,
                 deviceOsSpec = spec,
                 deviceMismatchStatus = mismatchStatus,
+                cpuFrequencies = emptyScatterMap(),
             )
         }
 
