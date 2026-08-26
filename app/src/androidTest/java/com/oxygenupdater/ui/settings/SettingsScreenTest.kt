@@ -6,6 +6,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsNodeInteractionCollection
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHasClickAction
@@ -264,12 +266,24 @@ class SettingsScreenTest : UsesSharedPreferencesTest() {
             // Don't performClick because that'll leave the app, which will fail subsequent tests
         }
 
-        // Clear cache (flaky test, depends on cache size)
-        // This is disabled if disk cache size is 0, which should be the case for tests.
-        // Compose M3 wraps disabled elements in a `RectangleShape`.
-        children[12].assertHasNoClickAction().onChildren().run {
-            this[1].assertHasTextExactly(R.string.settings_clear_cache)
-            this[2].assertHasTextExactly(activity.formatFileSize(0))
+        // Clear cache (conditional test, depends on cache size)
+        // This is disabled if disk cache size is 0, which should be the case for standalone
+        // runs of this file, but not if it's part of a full test run (CI or managed device).
+        children[12].run {
+            val zeroBytesText = activity.formatFileSize(0)
+            val text = fetchSemanticsNode().config.getOrNull(SemanticsProperties.Text)
+
+            // Compose M3 wraps disabled elements in a `RectangleShape`, and so text would be null here
+            if (text == null) assertHasNoClickAction().onChildren().run {
+                this[1].assertHasTextExactly(R.string.settings_clear_cache)
+                this[2].assertHasTextExactly(zeroBytesText)
+            } else assertHasClickAction().also {
+                assert(text.isNotEmpty()) {
+                    "Expected non-empty text for the 'Clear cache' SettingsItem"
+                }
+                assert(text.first().text == activity.getString(R.string.settings_clear_cache))
+                assert(text.last().text != zeroBytesText)
+            }
         }
     }
 
