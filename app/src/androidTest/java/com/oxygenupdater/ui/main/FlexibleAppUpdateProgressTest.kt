@@ -15,14 +15,14 @@ import kotlin.random.Random
 
 class FlexibleAppUpdateProgressTest : ComposeBaseTest() {
 
-    private var status by mutableStateOf(InstallStatus.DOWNLOADED)
+    private var status by mutableStateOf(InstallStatus.UNKNOWN)
     private var snackbarText: IntIntPair? = null
 
     @Test
     fun flexibleAppUpdateProgress() {
         var bytesDownloaded by mutableStateOf(1L)
         var totalBytesToDownload by mutableStateOf(2L)
-        setContent(true) {
+        setContent {
             FlexibleAppUpdateProgress(
                 status = status,
                 bytesDownloaded = { bytesDownloaded },
@@ -32,18 +32,24 @@ class FlexibleAppUpdateProgressTest : ComposeBaseTest() {
             )
         }
 
-        /** First we test for the initial value of status = [InstallStatus.DOWNLOADED] */
-        rule[FlexibleAppUpdateProgress_IndicatorTestTag].assertDoesNotExist()
-        snackbarText.check(AppUpdateDownloadedSnackbarData)
+        /** First we test for all statuses that we don't react to in the UI */
+        validateForOtherInstallStatuses(InstallStatus.UNKNOWN)
+        @Suppress("DEPRECATION") validateForOtherInstallStatuses(InstallStatus.REQUIRES_UI_INTENT)
+        validateForOtherInstallStatuses(InstallStatus.INSTALLING)
+        validateForOtherInstallStatuses(InstallStatus.INSTALLED)
+        validateForOtherInstallStatuses(InstallStatus.FAILED)
+        validateForOtherInstallStatuses(InstallStatus.CANCELED)
 
-        /** Then for [InstallStatus.PENDING] */
+        /** Then for the ones that we do, in the normal flow that we expect */
+
+        /** [InstallStatus.PENDING] */
         status = InstallStatus.PENDING
         rule[FlexibleAppUpdateProgress_IndicatorTestTag].assert(
             hasProgressBarRangeInfo(ProgressBarRangeInfo.Indeterminate)
         )
-        snackbarText.check(null) // should be dismissed
+        snackbarText.check(null)
 
-        /** Then for [InstallStatus.DOWNLOADING] */
+        /** [InstallStatus.DOWNLOADING] */
         status = InstallStatus.DOWNLOADING
         validateForProgress(bytesDownloaded / totalBytesToDownload.toFloat())
         // Then for some other progress value
@@ -54,12 +60,11 @@ class FlexibleAppUpdateProgressTest : ComposeBaseTest() {
         bytesDownloaded = 2; totalBytesToDownload = 0
         validateForProgress(1f) // should not be a DB0 error and be clamped to 1
 
-        // Then for other values
-        validateForOtherInstallStatuses(InstallStatus.UNKNOWN)
-        validateForOtherInstallStatuses(InstallStatus.INSTALLING)
-        validateForOtherInstallStatuses(InstallStatus.INSTALLED)
-        validateForOtherInstallStatuses(InstallStatus.FAILED)
-        validateForOtherInstallStatuses(InstallStatus.CANCELED)
+        /** Finally, [InstallStatus.DOWNLOADED] */
+        status = InstallStatus.DOWNLOADED
+        rule[FlexibleAppUpdateProgress_IndicatorTestTag].assertDoesNotExist()
+        ensureCallbackInvokedExactlyOnce("unregisterAppUpdateListener")
+        snackbarText.check(AppUpdateDownloadedSnackbarData)
     }
 
     private fun validateForProgress(progress: Float) {
@@ -71,12 +76,12 @@ class FlexibleAppUpdateProgressTest : ComposeBaseTest() {
 
     private fun validateForOtherInstallStatuses(@InstallStatus newStatus: Int) {
         status = newStatus
-        advanceFrame()
         rule[FlexibleAppUpdateProgress_IndicatorTestTag].assertDoesNotExist()
+        ensureNoCallbacksWereInvoked()
         snackbarText.check(null)
     }
 
-    private fun IntIntPair?.check(actual: IntIntPair?) = assert(this == actual) {
-        "Snackbar text did not match. Expected: $this, actual: $actual."
+    private fun IntIntPair?.check(expected: IntIntPair?) = assert(this == expected) {
+        "Snackbar text did not match. Expected: $expected, actual: $this."
     }
 }
