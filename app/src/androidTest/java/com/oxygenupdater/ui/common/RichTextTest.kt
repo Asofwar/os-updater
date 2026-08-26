@@ -4,7 +4,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.test.click
-import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.performTouchInput
 import com.oxygenupdater.BuildConfig.SERVER_DOMAIN
 import com.oxygenupdater.ComposeBaseTest
@@ -40,8 +39,7 @@ class RichTextTest : ComposeBaseTest() {
 
         rule[RichText_ContainerTestTag].run {
             performTouchInput {
-                longClick() // select text
-                click()     // should open URI
+                click() // should open URI
             }
 
             ensureCallbackInvokedExactlyOnce("openUri: $SERVER_DOMAIN")
