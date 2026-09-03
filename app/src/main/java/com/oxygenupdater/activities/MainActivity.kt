@@ -1366,9 +1366,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         companion object {
-            val LoadOnly = InterstitialAdLoadType(0)
-            val LoadAndShowImmediately = InterstitialAdLoadType(1)
-            val LoadAndShowDelayed = InterstitialAdLoadType(2)
+            val LoadOnly get() = InterstitialAdLoadType(0)
+            val LoadAndShowImmediately get() = InterstitialAdLoadType(1)
+            val LoadAndShowDelayed get() = InterstitialAdLoadType(2)
         }
     }
 

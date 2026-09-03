@@ -260,9 +260,9 @@ value class RichTextType private constructor(val value: Int) {
     }
 
     companion object {
-        val Custom = RichTextType(0)
-        val Html = RichTextType(1)
-        val Markdown = RichTextType(2)
+        val Custom get() = RichTextType(0)
+        val Html get() = RichTextType(1)
+        val Markdown get() = RichTextType(2)
     }
 }
 

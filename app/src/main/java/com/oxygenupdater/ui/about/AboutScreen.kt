@@ -127,10 +127,10 @@ private value class LinkType private constructor(val value: String) {
     override fun toString() = value
 
     companion object {
-        val Discord = LinkType("https://discord.gg/5TXdhKJ")
-        val GitHub = LinkType("https://github.com/oxygen-updater/oxygen-updater")
-        val Patreon = LinkType("https://patreon.com/oxygenupdater")
-        val Website = LinkType("https://oxygenupdater.com/")
+        val Discord get() = LinkType("https://discord.gg/5TXdhKJ")
+        val GitHub get() = LinkType("https://github.com/oxygen-updater/oxygen-updater")
+        val Patreon get() = LinkType("https://patreon.com/oxygenupdater")
+        val Website get() = LinkType("https://oxygenupdater.com/")
     }
 }
 

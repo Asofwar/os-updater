@@ -493,9 +493,9 @@ value class ThumbState private constructor(val value: Int) {
     }
 
     companion object {
-        val Active = ThumbState(0)
-        val Inactive = ThumbState(1)
-        val Dormant = ThumbState(2)
+        val Active get() = ThumbState(0)
+        val Inactive get() = ThumbState(1)
+        val Dormant get() = ThumbState(2)
     }
 }
 
@@ -554,4 +554,4 @@ private const val ScrollbarPressDelayMs = 10L
  */
 private const val ScrollbarPressDeltaPercent = 0.02f
 
-private val MinThumbSize = 40.dp
+private val MinThumbSize get() = 40.dp

@@ -19,21 +19,21 @@ value class DeviceOsSpec private constructor(val value: Int) {
 
     companion object {
         /** For devices that are supported by the app */
-        val SupportedDeviceAndOs = DeviceOsSpec(0)
+        val SupportedDeviceAndOs get() = DeviceOsSpec(0)
 
         /**
          * For carrier-exclusive devices like OnePlus 7T Pro 5G McLaren (T-Mobile).
          * These devices aren't supported by the app either, due to the "Local Upgrade" option being missing.
          */
-        val CarrierExclusiveOxygenOs = DeviceOsSpec(1)
+        val CarrierExclusiveOxygenOs get() = DeviceOsSpec(1)
 
         /** For new devices that haven't been added to the app yet */
-        val UnsupportedDevice = DeviceOsSpec(2)
+        val UnsupportedDevice get() = DeviceOsSpec(2)
 
         /**
          * For devices that aren't running OxygenOS/ColorOS.
          * This may include OPPO/OnePlus/realme devices with a custom ROM installed.
          */
-        val UnsupportedDeviceAndOs = DeviceOsSpec(3)
+        val UnsupportedDeviceAndOs get() = DeviceOsSpec(3)
     }
 }

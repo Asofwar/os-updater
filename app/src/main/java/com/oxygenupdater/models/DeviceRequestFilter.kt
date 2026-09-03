@@ -9,8 +9,8 @@ value class DeviceRequestFilter private constructor(val value: String) {
     override fun toString() = "DeviceRequestFilter.$value"
 
     companion object {
-        val All = DeviceRequestFilter("all")
-        val Enabled = DeviceRequestFilter("enabled")
-        val Disabled = DeviceRequestFilter("disabled")
+        val All get() = DeviceRequestFilter("all")
+        val Enabled get() = DeviceRequestFilter("enabled")
+        val Disabled get() = DeviceRequestFilter("disabled")
     }
 }

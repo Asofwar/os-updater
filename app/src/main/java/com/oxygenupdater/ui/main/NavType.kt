@@ -14,8 +14,8 @@ value class NavType private constructor(val value: Int) {
     }
 
     companion object {
-        val BottomBar = NavType(0)
-        val SideRail = NavType(1)
+        val BottomBar get() = NavType(0)
+        val SideRail get() = NavType(1)
 
         fun from(windowWidthSize: WindowWidthSizeClass) = when (windowWidthSize) {
             WindowWidthSizeClass.Medium, WindowWidthSizeClass.Expanded -> SideRail

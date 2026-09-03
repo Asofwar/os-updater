@@ -48,10 +48,10 @@ value class Theme private constructor(val value: Int) {
     }
 
     companion object {
-        val Light = Theme(0)
-        val Dark = Theme(1)
-        val System = Theme(2)
-        val Auto = Theme(3)
+        val Light get() = Theme(0)
+        val Dark get() = Theme(1)
+        val System get() = Theme(2)
+        val Auto get() = Theme(3)
 
         fun from(value: Int) = when (value) {
             Light.value -> Light

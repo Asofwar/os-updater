@@ -410,12 +410,12 @@ private val layoutIdActionsModifier = Modifier.layoutId(LayoutIdActions)
 
 /** same as [androidx.compose.material3.tokens.AppBarSmallTokens.ContainerHeight] */
 @VisibleForTesting
-val CollapsingAppBarMinHeight = 64.dp
+val CollapsingAppBarMinHeight get() = 64.dp
 
-private val CollapsingAppBarMaxHeight = 256.dp
+private val CollapsingAppBarMaxHeight get() = 256.dp
 
 /** same as [androidx.compose.material3.LargeTitleBottomPadding] */
-private val CollapsingAppBarBottomPadding = 28.dp
+private val CollapsingAppBarBottomPadding get() = 28.dp
 
 /** [androidx.compose.material3.Typography.titleLarge] */
 private const val CollapsingAppBarMinTitleSize = 22f

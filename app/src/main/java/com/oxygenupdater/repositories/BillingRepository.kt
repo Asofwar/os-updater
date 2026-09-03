@@ -863,12 +863,12 @@ class BillingRepository @Inject constructor(
         }
 
         companion object {
-            val Unknown = SkuState(0)
-            val NotPurchased = SkuState(1)
-            val PurchaseInitiated = SkuState(2)
-            val Pending = SkuState(3)
-            val Purchased = SkuState(4)
-            val PurchasedAndAcknowledged = SkuState(5)
+            val Unknown get() = SkuState(0)
+            val NotPurchased get() = SkuState(1)
+            val PurchaseInitiated get() = SkuState(2)
+            val Pending get() = SkuState(3)
+            val Purchased get() = SkuState(4)
+            val PurchasedAndAcknowledged get() = SkuState(5)
         }
     }
 

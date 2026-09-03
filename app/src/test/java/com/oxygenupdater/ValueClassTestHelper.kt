@@ -12,25 +12,26 @@ object ValueClassTestHelper {
         prefixClassNameInToStringCheck: Boolean = true,
     ) {
         val clazz = T::class.java
-        val declaredFields = clazz.declaredFields
+        val companion = clazz.declaredClasses.find { it.simpleName == "Companion" }
+        assertNotNull(companion) // ensure Companion exists
 
-        val valueFieldType = declaredFields.find { it.name == "value" }?.type
+        val valueFieldType = clazz.getDeclaredField("value").type
         assertNotNull(valueFieldType) // ensure it has a `value` constructor param
 
-        val fields = declaredFields.mapNotNull {
-            // We only care about `private static final` fields in value classes
-            if (it.modifiers and (Modifier.PRIVATE or Modifier.STATIC or Modifier.FINAL) == 0) return@mapNotNull null
-
-            // Ignore constructor param
-            if (it.name == "value") return@mapNotNull null
-
-            // Ignore fields that don't have the same type the constructor param
-            if (it.type != valueFieldType) return@mapNotNull null
+        val methods = companion.declaredMethods.mapNotNull {
+            // We only care about `public final` getters in value classes
+            if (it.modifiers and (Modifier.PUBLIC or Modifier.FINAL) == 0) return@mapNotNull null
+            // Ignore other non-getter methods
+            if (it.parameterCount != 0) return@mapNotNull null
+            // Ignore methods that don't have the same type the constructor param
+            if (it.returnType != valueFieldType) return@mapNotNull null
 
             it.isAccessible = true; it
         }
 
-        val values = fields.map { it.get(clazz)!! }
+        val companionObj = companion.getDeclaredConstructor().apply { isAccessible = true }.newInstance()
+        val values = methods.map { it.invoke(companionObj)!! }
+
         // If empty, there's probably something wrong with our reflection code above
         assertTrue(values.isNotEmpty())
         // Ensure no value is repeated (could be due to a human copy-paste mistake)
@@ -42,7 +43,10 @@ object ValueClassTestHelper {
         values.map { constructor.newInstance(it).toString() }.forEachIndexed { index, string ->
             val expected = if (valueFieldType == String::class.java) {
                 values[index] as String
-            } else fields[index].name
+            } else {
+                // Strip Kotlin's default "get" prefix for methods and the generated "-<random>" suffix
+                methods[index].name.removePrefix("get").substringBefore('-')
+            }
 
             assertEquals(if (prefixClassNameInToStringCheck) "${clazz.simpleName}.$expected" else expected, string)
         }

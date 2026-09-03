@@ -15,9 +15,9 @@ value class DownloadAction private constructor(val value: Int) {
     }
 
     companion object {
-        val Enqueue = DownloadAction(0)
-        val Pause = DownloadAction(1)
-        val Cancel = DownloadAction(2)
-        val Delete = DownloadAction(3)
+        val Enqueue get() = DownloadAction(0)
+        val Pause get() = DownloadAction(1)
+        val Cancel get() = DownloadAction(2)
+        val Delete get() = DownloadAction(3)
     }
 }

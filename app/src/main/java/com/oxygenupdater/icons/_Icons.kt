@@ -60,5 +60,5 @@ fun PreviewIcon(icon: ImageVector) = PreviewAppTheme {
     Icon(icon, null)
 }
 
-val MaterialIconDimension = 24.dp
+val MaterialIconDimension get() = 24.dp
 const val SymbolViewportDimension = 960f
