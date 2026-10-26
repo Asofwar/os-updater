@@ -50,6 +50,7 @@ import com.oxygenupdater.internal.settings.KeyAdvancedMode
 import com.oxygenupdater.internal.settings.KeyDevice
 import com.oxygenupdater.internal.settings.KeyDeviceId
 import com.oxygenupdater.internal.settings.KeyDownloadBytesDone
+import com.oxygenupdater.internal.settings.KeyDownloadChunks
 import com.oxygenupdater.internal.settings.KeyFlexibleAppUpdateIgnoreCount
 import com.oxygenupdater.internal.settings.KeyIgnoreIncorrectDeviceWarnings
 import com.oxygenupdater.internal.settings.KeyIgnoreNotificationPermissionSheet
@@ -299,7 +300,7 @@ class MainViewModel @Inject constructor(
         }
 
         logDebug(TAG, "Deleting any associated tracker preferences for downloaded file")
-        sharedPreferences.remove(KeyDownloadBytesDone)
+        sharedPreferences.remove(KeyDownloadBytesDone, KeyDownloadChunks)
         logDebug(TAG, "Deleting downloaded update file $filename")
 
         File(context.getExternalFilesDir(null), filename).run {
