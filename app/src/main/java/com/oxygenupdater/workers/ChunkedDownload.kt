@@ -21,13 +21,45 @@ import kotlin.math.min
 
 /**
  * OTA servers (e.g. Aliyun OSS, used by OPPO/OnePlus) limit throughput per connection, so a ZIP
- * is split into [ChunkSize] chunks which are fetched over [DownloadConnections] parallel connections.
+ * is split into [ChunkSize] chunks which are fetched over several parallel connections (see [downloadConnectionsFor]).
  * Small chunks (instead of one big range per connection) keep all connections busy until the very end.
  *
  * Measured on a OnePlus Nord CE6 OTA link (desktop connection): ~11 MB/s with one connection, ~18 MB/s with four.
  */
-const val DownloadConnections = 4
 const val ChunkSize = 32L * 1024 * 1024 // 32 MiB
+
+/** Value of the `download_connections` pref that lets [downloadConnectionsFor] pick the count automatically */
+const val DownloadConnectionsAuto = 0
+const val MaxDownloadConnections = 8
+
+/** Transport of the active network, as far as it matters for [downloadConnectionsFor] */
+enum class NetworkTransport { WifiOrEthernet, Cellular, Other }
+
+/**
+ * Number of parallel connections to use for a download.
+ *
+ * [forced] (1..[MaxDownloadConnections], from the "Download connections" setting) overrides everything, so that
+ * testers can compare counts on their own device. Otherwise: 1 in battery saver mode, 4 on unmetered Wi-Fi/Ethernet,
+ * 2 on cellular, metered Wi-Fi (e.g. a phone hotspot) and anything unknown.
+ *
+ * CPU count is deliberately not a factor: the download is I/O-bound, and a handful of blocking reads plus
+ * [RandomAccessFile] writes cost next to nothing even on a weak core. What extra connections do cost is more TCP flows
+ * competing on a congested cellular link, and writes landing at several offsets at once on slow flash.
+ *
+ * Known limitation: below Android 10, a VPN network reports only `TRANSPORT_VPN` (the underlying Wi-Fi/cellular
+ * transports were added in API 29), so VPN users on those versions get the conservative 2.
+ */
+fun downloadConnectionsFor(
+    transport: NetworkTransport,
+    metered: Boolean,
+    powerSave: Boolean,
+    forced: Int = DownloadConnectionsAuto,
+) = when {
+    forced in 1..MaxDownloadConnections -> forced
+    powerSave -> 1
+    transport == NetworkTransport.WifiOrEthernet && !metered -> 4
+    else -> 2
+}
 
 private const val BufferSize = 64 * 1024
 private const val ChunkRetries = 3
@@ -116,7 +148,7 @@ inline fun <T> wrapRequestErrors(block: () -> T): T = try {
 suspend fun downloadChunks(
     file: File,
     chunks: DownloadChunks,
-    connections: Int = DownloadConnections,
+    connections: Int,
     retryDelayMs: Long = ChunkRetryDelayMs,
     fetch: suspend (rangeHeader: String) -> Response<ResponseBody>,
 ) = coroutineScope {

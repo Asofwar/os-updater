@@ -124,7 +124,7 @@ class ChunkedDownloadTest {
         val chunks = DownloadChunks.create(data.size.toLong(), 64)
         assertFailsWith<IOException> {
             runBlocking {
-                downloadChunks(tempFile(), chunks, retryDelayMs = 0) { Response.success(data.toResponseBody()) }
+                downloadChunks(tempFile(), chunks, connections = 1, retryDelayMs = 0) { Response.success(data.toResponseBody()) }
             }
         }
     }
@@ -150,7 +150,7 @@ class ChunkedDownloadTest {
         val chunks = DownloadChunks.create(data.size.toLong(), 64)
         assertFailsWith<DownloadRequestException> {
             runBlocking {
-                downloadChunks(tempFile(), chunks, retryDelayMs = 0) { throw IOException("no network") }
+                downloadChunks(tempFile(), chunks, connections = 1, retryDelayMs = 0) { throw IOException("no network") }
             }
         }
     }
@@ -159,6 +159,34 @@ class ChunkedDownloadTest {
     fun `total size is read from Content-Range`() {
         assertEquals(1000L, partialResponse("bytes=0-0").totalBytesFromContentRange())
         assertNull(Response.success(data.toResponseBody()).totalBytesFromContentRange())
+    }
+
+    @Test
+    fun `connection count follows transport and power state`() {
+        val wifi = NetworkTransport.WifiOrEthernet
+        assertEquals(4, downloadConnectionsFor(wifi, metered = false, powerSave = false))
+        assertEquals(2, downloadConnectionsFor(wifi, metered = true, powerSave = false)) // e.g. phone hotspot
+        assertEquals(2, downloadConnectionsFor(NetworkTransport.Cellular, metered = true, powerSave = false))
+        assertEquals(2, downloadConnectionsFor(NetworkTransport.Cellular, metered = false, powerSave = false))
+        assertEquals(2, downloadConnectionsFor(NetworkTransport.Other, metered = false, powerSave = false))
+
+        for (transport in NetworkTransport.entries) {
+            assertEquals(1, downloadConnectionsFor(transport, metered = false, powerSave = true), "$transport")
+        }
+    }
+
+    @Test
+    fun `forced connection count overrides everything, unless out of range`() {
+        val wifi = NetworkTransport.WifiOrEthernet
+        for (forced in 1..MaxDownloadConnections) {
+            assertEquals(forced, downloadConnectionsFor(wifi, metered = false, powerSave = false, forced = forced))
+            assertEquals(forced, downloadConnectionsFor(NetworkTransport.Cellular, metered = true, powerSave = true, forced = forced))
+        }
+
+        for (forced in listOf(DownloadConnectionsAuto, -1, MaxDownloadConnections + 1, Int.MAX_VALUE)) {
+            assertEquals(4, downloadConnectionsFor(wifi, metered = false, powerSave = false, forced = forced), "forced=$forced")
+            assertEquals(1, downloadConnectionsFor(wifi, metered = false, powerSave = true, forced = forced), "forced=$forced")
+        }
     }
 
     private fun tempFile() = File.createTempFile("chunked", ".zip").apply { deleteOnExit() }

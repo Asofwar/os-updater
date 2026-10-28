@@ -453,7 +453,9 @@ class MainViewModel @Inject constructor(
 
     fun getPref(key: String, default: String) = sharedPreferences[key, default]
     fun getPref(key: String, default: Boolean) = sharedPreferences[key, default]
+    fun getPref(key: String, default: Int) = sharedPreferences[key, default]
     fun persist(key: String, value: Boolean) = sharedPreferences.set(key, value)
+    fun persist(key: String, value: Int) = sharedPreferences.set(key, value)
 
     fun openEmail(context: Context) {
         val chosenDevice = sharedPreferences[KeyDevice, "<UNKNOWN>"]

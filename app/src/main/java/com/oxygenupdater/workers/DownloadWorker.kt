@@ -5,15 +5,21 @@ import android.app.Notification.CATEGORY_PROGRESS
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.ServiceInfo
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES
 import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.os.PowerManager
+import android.os.SystemClock
+import android.util.Log
 import androidx.compose.ui.util.fastCoerceAtLeast
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.PRIORITY_LOW
 import androidx.core.content.ContextCompat
+import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
@@ -32,9 +38,11 @@ import com.oxygenupdater.extensions.set
 import com.oxygenupdater.extensions.showToast
 import com.oxygenupdater.internal.NotSet
 import com.oxygenupdater.internal.NotSetL
+import com.oxygenupdater.internal.settings.KeyAdvancedMode
 import com.oxygenupdater.internal.settings.KeyDeviceId
 import com.oxygenupdater.internal.settings.KeyDownloadBytesDone
 import com.oxygenupdater.internal.settings.KeyDownloadChunks
+import com.oxygenupdater.internal.settings.KeyDownloadConnections
 import com.oxygenupdater.internal.settings.KeyUpdateMethodId
 import com.oxygenupdater.models.TimeRemaining
 import com.oxygenupdater.repositories.ServerRepository
@@ -50,7 +58,6 @@ import com.oxygenupdater.utils.UpdateDataVersionFormatter
 import com.oxygenupdater.utils.isNetworkError
 import com.oxygenupdater.utils.logDebug
 import com.oxygenupdater.utils.logError
-import com.oxygenupdater.utils.logInfo
 import com.oxygenupdater.utils.logVerbose
 import com.oxygenupdater.utils.logWarning
 import dagger.assisted.Assisted
@@ -63,6 +70,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -78,6 +86,7 @@ import java.net.HttpURLConnection
 import java.security.DigestInputStream
 import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.math.abs
@@ -404,28 +413,44 @@ class DownloadWorker @AssistedInject constructor(
             DownloadChunks.create(totalBytes)
         }
 
-        logInfo(TAG, "Downloading ZIP in ${chunks.count} chunks over $DownloadConnections connections")
+        val conditions = currentDownloadConditions()
+        val connections = downloadConnectionsFor(
+            transport = conditions.transport,
+            metered = conditions.metered,
+            powerSave = conditions.powerSave,
+            forced = conditions.forced,
+        )
+        logDownloadStats("Downloading ZIP in ${chunks.count} chunks over $connections connections ($conditions)")
+
         val progress = launchProgressPublisher(totalBytes, chunks::bytesDone) {
             sharedPreferences[KeyDownloadChunks] = chunks.serialize()
         }
 
+        val bytesAtStart = chunks.bytesDone()
+        val startMs = SystemClock.elapsedRealtime()
+        var completed = false
         try {
-            downloadChunks(tempFile, chunks) { rangeHeader -> downloadApi.downloadZip(url, rangeHeader) }
+            downloadChunks(tempFile, chunks, connections) { rangeHeader -> downloadApi.downloadZip(url, rangeHeader) }
+            completed = true
         } finally {
             progress.cancel()
             // Save even on failure/cancellation, so that the download can be resumed later
             sharedPreferences[KeyDownloadChunks] = chunks.serialize()
+            logThroughput(outcome(completed), chunks.bytesDone() - bytesAtStart, startMs, connections, conditions)
         }
     }
 
     /** Fallback for servers that don't support range requests. Can't be resumed, so it always starts over. */
     private suspend fun downloadSequentially(body: ResponseBody) = coroutineScope {
-        logInfo(TAG, "Downloading ZIP sequentially")
+        val conditions = currentDownloadConditions()
+        logDownloadStats("Downloading ZIP sequentially, server ignored Range ($conditions)")
         sharedPreferences.remove(KeyDownloadBytesDone, KeyDownloadChunks)
 
         val bytesDone = AtomicLong()
         val progress = launchProgressPublisher(body.contentLength(), bytesDone::get)
 
+        val startMs = SystemClock.elapsedRealtime()
+        var completed = false
         try {
             body.byteStream().use { stream ->
                 tempFile.outputStream().use { output ->
@@ -438,9 +463,77 @@ class DownloadWorker @AssistedInject constructor(
                     }
                 }
             }
+            completed = true
         } finally {
             progress.cancel()
+            logThroughput(outcome(completed), bytesDone.get(), startMs, connections = 1, conditions = conditions)
         }
+    }
+
+    /** For [logThroughput]: how a download attempt ended. Must be called from the attempt's own scope. */
+    private fun CoroutineScope.outcome(completed: Boolean) = when {
+        completed -> "completed"
+        !isActive -> "cancelled"
+        else -> "interrupted" // an error, including a 403 that'll be retried with a fresh link
+    }
+
+    /** Everything [downloadConnectionsFor] bases its decision on, captured once per download attempt */
+    private data class DownloadConditions(
+        val transport: NetworkTransport,
+        val metered: Boolean,
+        val powerSave: Boolean,
+        val forced: Int,
+    ) {
+        override fun toString() = "transport=$transport, metered=$metered, powerSave=$powerSave, forced=" +
+                if (forced == DownloadConnectionsAuto) "auto" else forced.toString()
+    }
+
+    private fun currentDownloadConditions(): DownloadConditions {
+        val connectivityManager = context.getSystemService<ConnectivityManager>()
+        val capabilities = connectivityManager?.getNetworkCapabilities(connectivityManager.activeNetwork)
+        val transport = when {
+            capabilities == null -> NetworkTransport.Other
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
+                    || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> NetworkTransport.WifiOrEthernet
+
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> NetworkTransport.Cellular
+            else -> NetworkTransport.Other
+        }
+
+        return DownloadConditions(
+            transport = transport,
+            metered = connectivityManager?.isActiveNetworkMetered == true,
+            powerSave = context.getSystemService<PowerManager>()?.isPowerSaveMode == true,
+            // The setting is reachable only in advanced mode, so a value left behind after turning it off must not stick
+            forced = if (sharedPreferences[KeyAdvancedMode, false]) {
+                sharedPreferences[KeyDownloadConnections, DownloadConnectionsAuto]
+            } else DownloadConnectionsAuto,
+        )
+    }
+
+    /**
+     * One line per download attempt with the effective throughput, so that reports from testers carry numbers.
+     * Logged on every outcome (completed, failed, cancelled, link refreshed), for the bytes transferred in this attempt only.
+     */
+    private fun logThroughput(outcome: String, bytes: Long, startMs: Long, connections: Int, conditions: DownloadConditions) {
+        val seconds = (SystemClock.elapsedRealtime() - startMs) / 1000.0
+        val megabytes = bytes / 1e6
+        val megabytesPerSecond = if (seconds > 0) megabytes / seconds else 0.0
+        logDownloadStats(
+            "Download %s: %.1f MB in %.1f s = %.2f MB/s over %d connections (%s)".format(
+                Locale.ROOT, outcome, megabytes, seconds, megabytesPerSecond, connections, conditions
+            )
+        )
+    }
+
+    /**
+     * Unlike [com.oxygenupdater.utils.logInfo], this is not stripped from release builds: it's a couple of lines
+     * per download, and testers on release builds need them in logcat. Also breadcrumbed to Crashlytics so that
+     * reports carry them too.
+     */
+    private fun logDownloadStats(message: String) {
+        Log.i(TAG, message)
+        crashlytics.log(message)
     }
 
     /** Publishes download progress every [MinMsBetweenProgressPublish] milliseconds, until cancelled */
